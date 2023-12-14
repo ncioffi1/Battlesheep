@@ -5,6 +5,8 @@
         <meta charset="UTF-8">
         <meta name="viewport"
         content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="reset.css">
+        <link rel="stylesheet" href="style.css">
 
         <!-- <script src="./moving_object.js"></script>
         <script src="./asteroid.js"></script>
@@ -15,7 +17,16 @@
         <title>Canvas Demo</title>
     </head>
     <body>
-        
-        <canvas id="canvas"></canvas> 
+        <!-- image loading.  -->
+        <!-- <img id= "square" src="assets/square.png" class="hidden"> -->
+        <!-- canvas layers.  -->
+        <div class="wrapper">
+            <canvas id="layer1" width="800" height="600"></canvas>
+            <canvas id="layer2" width="800" height="600"></canvas>
+            <canvas id="layer3" width="800" height="600"></canvas>
+        </div> 
+
+        <!-- <canvas id="layer3"></canvas> 
+        <canvas id="layer4"></canvas>  -->
     </body>
 </html>

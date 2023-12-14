@@ -103,6 +103,20 @@ class Game {
         }
     }
 
+    // draw(ctx) {
+    //     ctx.clearRect(0, 0, Game.DIM_X, Game.DIM_Y);
+    //     ctx.fillStyle = Game.BG_COLOR;
+    //     ctx.fillRect(0, 0, Game.DIM_X, Game.DIM_Y);
+
+    //     // this.allObjects().forEach(function(object) {
+    //     //     object.draw(ctx);
+    //     // })
+    //     // let ctx2 = this.canvasCtx;
+    //     this.ships.forEach(function(ship) {
+    //         asteroid.draw(ctx2);
+    //     })
+    // }
+
     // clear(ctx) {
 
     // }
@@ -113,6 +127,8 @@ class Ship {
         this.context = context;
         this.xPos = xPos;
         this.yPos = yPos;
+        this.yPosI = yPos;
+        this.xPosI = xPos;
         this.xSize = xSize;
         this.ySize = ySize;
         this.color = color;
@@ -136,6 +152,9 @@ class Ship {
         }
 
         this.drawImageInCanvas(this.context, filepath, this.xPos, this.yPos, this.xSize, this.ySize)
+        this.yPos += 0.1;
+        this.xPos += 0.1;
+        // if (this.yPos > this.yPosI)
         // console.log("hello")
 
         requestAnimationFrame(this.draw);

@@ -8,6 +8,16 @@ Battlesheep is a spin on the game Battleship.  It takes place on a farm // grass
 
 ## Functionality and MVPs
 
+In this game, users will be able to play rounds of the game against a computer player.  
+
+The user can:
+    Start the game.
+    Quit the game.
+    Pause the game.
+        From the pause menu, turn off music / sound.
+    
+    Play the game.
+        Play alternates between players until one player has defeated the others' ships.
 
 ## Wireframes
 

@@ -29,6 +29,7 @@ This project will be implemented with the following technologies:
 * Canvas API to render the game board
 * Webpack to bundle and transpile the source JavaScript code
 * NPM to manage project dependencies
+* Febucci's Easing Functions:  https://www.febucci.com/2018/08/easing-functions/
 
 ## Implementation Timeline
 

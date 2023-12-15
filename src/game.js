@@ -28,7 +28,8 @@ class Game {
         this.tempSheep2;
         this.tempSheep3;
         this.tempSheep4;
-        this.sheepLeftToPlace = [1, 2, 1];
+        this.sheepLeftToPlace = [1];
+        // this.sheepLeftToPlace = [1, 2, 3, 4, 5, 6];
         // this.sheepLeftToPlace = [1, 1, 1, 1, 1]
         this.sheepPositions = [];
         this.enemySheepPositions = [[0, 0], [2, 0], [4, 0]];
@@ -39,13 +40,17 @@ class Game {
         this.enemyButtons = [];
         this.playerSheeps = [];
         this.enemySheeps = [];
+        this.activeSheep;
         this.activeTextString = "";
+        this.activeTextString2 = "";
+        this.activeTextString3 = "";
+        this.boardSize = 7;
         this.draw();
     }
 
-    // allObjects() {
-    //     return [].concat(this.ships, this.asteroids, this.bullets);
-    // };
+    // note this project uses febucci lerp functions found here:
+    // https://www.febucci.com/2018/08/easing-functions/
+
     getCursorPosition(canvas, event) {
         const rect = canvas.getBoundingClientRect()
         const x = event.clientX - rect.left
@@ -106,6 +111,8 @@ class Game {
                 // this.ctx2.textAlign = "center";
                 // this.ctx2.fillText("Place Your Sheeps", 400, 50);
                 this.activeTextString = "Place Your Sheeps"
+                this.activeTextString2 = "";
+                this.activeTextString3 = "";
                 
                 // generate game board
                 this.generateSquares(this.ctx3);
@@ -132,45 +139,28 @@ class Game {
 
                     this.buttons.forEach(function(button) {
                         if (button.buttonCheck(that.clickX, that.clickY)) {
-                            // if buttoncheck returned true, place ship.
-                            if (button.buttonType === "ship") {
-                                if (that.validSpotToPlace(button.buttonPos)) {
-                                    button.placeSheepHead();
-                                    that.sheepPositions.push(button.buttonPos);
-                               
-                                    that.sheepLeftToPlace.shift();
-                                    that.clearTempSheep();
-                                    // console.log(that.sheepLeftToPlace.length);
-                                    // delete that.tempSheep;
-                                    if (that.sheepLeftToPlace.length > 0) {
-                                        that.generateTempSheep(that.sheepLeftToPlace[0]);
-                                    } else {
-                                        that.altState = 2;
-                                    }
-                                } else {
-                                    // invalid spot
-                                    console.log("invalid position.");
-                                }
-                            }
+                            that.activeSheep.placeSheep(button.buttonPos);
                         }
                     })
                 }
 
                 // tracking hover.
                 let that = this;
+
+                // call this w. activesheep hover function
                 this.buttons.forEach(function(button) {
                     if (button.buttonType === "ship") {
                         if (button.buttonCheck(that.hoverX, that.hoverY)) {
-                            button.hover();
-                        } else {
-                            button.blank();
-                        }   
+                            that.activeSheep.hoverSheep(button.buttonPos);
+                        } 
                     }  
                 })
             } else if (this.altState === 2) {
                 setTimeout(() => { this.altState = 3 }, 1000);
                 // this.altState = 3;
                 this.activeTextString = "";
+                this.activeTextString2 = "";
+                this.activeTextString3 = ""
                 this.queueMoveShips();
             } else if (this.altState === 3) {
                 if (this.moveShips("down")){
@@ -178,6 +168,8 @@ class Game {
                 }
             } else if (this.altState === 4){
                 this.activeTextString = "Fire Your Cannon";
+                this.activeTextString2 = "";
+                this.activeTextString3 = "";
                 
                 // fire.
                 if (this.clicked){
@@ -317,10 +309,12 @@ class Game {
         // queueing move for each ship
         this.ships.forEach(function(ship){
             ship.queueMove();
+            ship.clearTime();
         })
         // queueing move for each enemy ship
         this.enemyShips.forEach(function(ship){
             ship.queueMove();
+            ship.clearTime();
         })
     }
 
@@ -330,10 +324,20 @@ class Game {
         this.ships.forEach(function(ship){
             if (!ship.moveComplete) {
                 if (direction === "down"){
-                    ship.moveDown();
+                    if (ship.currentTime === 0) {
+                        ship.currentTime = Date.now();
+                        ship.lastTime = Date.now();
+                    } else {
+                        ship.moveDown();
+                    }
                     that.done = false;
                 } else if (direction === "up"){
-                    ship.moveUp();
+                    if (ship.currentTime === 0) {
+                        ship.currentTime = Date.now();
+                        ship.lastTime = Date.now();
+                    } else {
+                        ship.moveUp();
+                    }
                     that.done = false;
                 }
             }
@@ -342,10 +346,20 @@ class Game {
         this.enemyShips.forEach(function(ship){
             if (!ship.moveComplete) {
                 if (direction === "down"){
-                    ship.moveDown();
+                    if (ship.currentTime === 0) {
+                        ship.currentTime = Date.now();
+                        ship.lastTime = Date.now();
+                    } else {
+                        ship.moveDown();
+                    }
                     that.done = false;
                 } else if (direction === "up") {
-                    ship.moveUp();
+                    if (ship.currentTime === 0) {
+                        ship.currentTime = Date.now();
+                        ship.lastTime = Date.now();
+                    } else {
+                        ship.moveUp();
+                    }
                     that.done = false;
                 }
             }
@@ -369,7 +383,16 @@ class Game {
 
     validSpotToPlace(pos) {
         // check if surrounding squares have sheep.
-
+        if (pos[0] < 0 || pos[0] > (this.boardSize - 1)) {
+            this.activeTextString2 = "Invalid Position:"  
+            this.activeTextString3 = "Position was off board!";
+            return false;
+        } else if (pos[1] < 0 || pos[1] > (this.boardSize - 1)) {
+            this.activeTextString2 = "Invalid Position:"  
+            this.activeTextString3 = "Position was off board!";
+            return false;
+        }
+        
         let i = -1;
         let j = -1;
         for (i = -1; i < 2; i++){
@@ -381,15 +404,17 @@ class Game {
                 // console.log(this.sheepPositions)
                 // console.log(this.sheepPositions.includes(_pos))
                 if (JSON.stringify(this.sheepPositions).includes(_pos)){
+                    this.activeTextString2 = "Invalid Position:"  
+                    this.activeTextString3 = "Position too close to another sheep!";
                     return false;
-                }
+                }                
             }
         }
         return true;
     }
 
     generateSquares(ctx) {
-        let size = 7;
+        let size = this.boardSize;
         for (let i = 0; i < size; i++) {
             for (let j = 0; j < size; j++){
                 let xPos = 400 - ((Math.floor(size / 2)) * 50) + (i * 50);
@@ -407,7 +432,7 @@ class Game {
     }
 
     generateEnemySquares(ctx) {
-        let size = 7;
+        let size = this.boardSize;
         for (let i = 0; i < size; i++) {
             for (let j = 0; j < size; j++){
                 let xPos = 400 - ((Math.floor(size / 2)) * 50) + (i * 50);
@@ -424,18 +449,56 @@ class Game {
         }
     }
 
-    generateTempSheep(size) {
-        if (size === 1){
-            let xPos = 400;
-            let yPos = 125;
+    generateTempSheep(id) {
+        let xMod = 250;
+        let yMod = -25;
+        if (id === 1){
+            let xPos = 400 + xMod;
+            let yPos = 125 + yMod;
 
             this.tempSheep = new Ship(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
-        } else if (size === 2) {
-            let xPos = 400;
-            let yPos = 125;
+            this.activeSheep = new Sheep(this, [[0, 0]]);
+        } else if (id === 2) {
+            let xPos = 375 + xMod;
+            let yPos = 125 + yMod;
 
             this.tempSheep = new Ship(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
             this.tempSheep2 = new Ship(this.ctx3, xPos + 50, yPos, 50, 50, "body", "sheep");
+            this.activeSheep = new Sheep(this, [[0, 0], [1, 0]]);
+        } else if (id === 3) {
+            let xPos = 350 + xMod;
+            let yPos = 125 + yMod;
+
+            this.tempSheep = new Ship(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
+            this.tempSheep2 = new Ship(this.ctx3, xPos + 50, yPos, 50, 50, "body", "sheep");
+            this.tempSheep3 = new Ship(this.ctx3, xPos + 100, yPos, 50, 50, "body", "sheep");
+            this.activeSheep = new Sheep(this, [[0, 0], [1, 0], [2, 0]]);
+        } else if (id === 4) {
+            let xPos = 325 + xMod;
+            let yPos = 125 + yMod;
+
+            this.tempSheep = new Ship(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
+            this.tempSheep2 = new Ship(this.ctx3, xPos + 50, yPos, 50, 50, "body", "sheep");
+            this.tempSheep3 = new Ship(this.ctx3, xPos + 100, yPos, 50, 50, "body", "sheep");
+            this.tempSheep4 = new Ship(this.ctx3, xPos + 150, yPos, 50, 50, "body", "sheep");
+            this.activeSheep = new Sheep(this, [[0, 0], [1, 0], [2, 0], [3, 0]]);
+        } else if (id === 5) {
+            let xPos = 375 + xMod;
+            let yPos = 100 + yMod;
+
+            this.tempSheep = new Ship(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
+            this.tempSheep2 = new Ship(this.ctx3, xPos + 50, yPos, 50, 50, "body", "sheep");
+            this.tempSheep3 = new Ship(this.ctx3, xPos + 50, yPos + 50, 50, 50, "body", "sheep");
+            this.activeSheep = new Sheep(this, [[0, 0], [1, 0], [1, 1]]);
+        } else if (id === 6) {
+            let xPos = 350 + xMod;
+            let yPos = 100 + yMod;
+
+            this.tempSheep = new Ship(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
+            this.tempSheep2 = new Ship(this.ctx3, xPos + 50, yPos, 50, 50, "body", "sheep");
+            this.tempSheep3 = new Ship(this.ctx3, xPos + 100, yPos, 50, 50, "body", "sheep");
+            this.tempSheep4 = new Ship(this.ctx3, xPos + 50, yPos + 50, 50, 50, "body", "sheep");
+            this.activeSheep = new Sheep(this, [[0, 0], [1, 0], [2, 0], [1, 1]] );
         }
     }
 
@@ -462,6 +525,16 @@ class Game {
         this.ctx3.fillStyle = "black";
         this.ctx3.textAlign = "center";
         this.ctx3.fillText(this.activeTextString, 400, 50);
+
+        this.ctx3.font = ("16px Arial");
+        this.ctx3.fillStyle = "black";
+        this.ctx3.textAlign = "center";
+        this.ctx3.fillText(this.activeTextString2, 400, 80);
+
+        this.ctx3.font = ("16px Arial");
+        this.ctx3.fillStyle = "black";
+        this.ctx3.textAlign = "center";
+        this.ctx3.fillText(this.activeTextString3, 400, 100);
 
         this.ships.forEach(function(ship) {
             ship.draw();
@@ -492,11 +565,96 @@ class Game {
 class Sheep {
     // this object will store each position making up
     // a Sheep.
-    constructor(sheepPartPositions) {
-        this.sheepPartPositions = sheepPartPositions;
+    constructor(game, sheepShapes) {
+        this.sheepPartPositions = []
+        this.game = game;
         this.size = this.sheepPartPositions.length;
         this.sheepPartsFound = [];
+        this.sheepHeadPos;
+        this.sheepShapes = sheepShapes;
     }
+
+    setSheepPartPositions(positions) {
+        this.sheepPartPositions = positions;
+    }
+
+    // sheepShape starts at 0,0.
+    // sheepshape options.
+    // [[0, 0]];
+    // [[0, 0], [1, 0]]                 |  [[0, 0], [0, 1]]
+    // [[0, 0], [1, 0], [2, 0]]         |  [[0, 0], [0, 1], [0, 2]]
+    // [[0, 0], [1, 0], [2, 0], [3, 0]] |  [[0, 0], [0, 1], [0, 2], [0, 3]]
+    // [[0, 0], [1, 0], [1, 1]]         |  [[1, 0], [1, 1], [0, 1]]         |  [[1, 1], [0, 1], [0, 0]          |  [0, 1], [0, 0], [1, 0]]
+    // [[0, 0], [1, 0], [2, 0], [1, 1]] |  [[0, 0], [0, 1], [0, 2], [1, 1]] |  [[1, 0] [0, 1] [1, 1] [2, 1]]    |  [[1, 0] [0, 1] [1, 1] [1, 2]]
+    hoverSheep(pos){
+        let hoverPositions = [];
+        let that = this;
+        this.sheepShapes.forEach(function(sheepShape) {
+            let _x = pos[0] + sheepShape[0];
+            let _y = pos[1] + sheepShape[1];
+            let _pos = [_x, _y];
+            hoverPositions.push(_pos);
+        })
+
+        this.game.buttons.forEach(function(button){
+            if (button.buttonType === "ship") {
+                if (JSON.stringify(hoverPositions).includes(button.buttonPos)){
+                    button.hover();
+                } else {
+                    button.blank();
+                }
+            }
+        })
+    }
+
+    placeSheep(pos){
+        let placePositions = [];
+        let that = this;
+        this.sheepShapes.forEach(function(sheepShape) {
+            let _x = pos[0] + sheepShape[0];
+            let _y = pos[1] + sheepShape[1];
+            let _pos = [_x, _y];
+            placePositions.push(_pos);
+        })
+
+        let checkValid = true;
+
+        placePositions.forEach(function(placePosition) {
+            if (!that.game.validSpotToPlace(placePosition)) {
+                checkValid = false;
+            }
+        })
+
+        if (checkValid){
+            this.game.buttons.forEach(function(button) {
+                if (button.buttonType === "ship") {
+                    if (JSON.stringify(placePositions).includes(button.buttonPos)) {
+                        if (button.buttonPos.toString() === placePositions[0].toString()) {
+                            button.placeSheepHead();
+                        } else {
+                            button.placeSheepBody();
+                        }
+                        that.game.sheepPositions.push(button.buttonPos);
+                    }
+                }
+            })
+
+            that.game.sheepLeftToPlace.shift();
+            that.game.clearTempSheep();
+            that.game.activeTextString2 = "";
+            that.game.activeTextString3 = "";
+
+            if (that.game.sheepLeftToPlace.length > 0) {
+                that.game.generateTempSheep(that.game.sheepLeftToPlace[0]);
+            } else {
+                that.game.altState = 2;
+            }
+        } else {
+            // that.game.activeTextString2 = "invalid position\nposition was off board";
+            console.log("invalid position...");
+        }
+    }
+
 
     isSheepFound() {
         if (this.sheepPartsFound.length === this.size) {
@@ -524,7 +682,13 @@ class Ship {
         this.yPos = yPos;
         this.xPosI = xPos;
         this.yPosI = yPos;
-        this.moveSpeed = 5;
+        // this.moveSpeed = 5;
+        // this.moveSpeed = 0.01;
+        this.timeSpeed = 0.01;
+        this.timeElapsed = 0;
+        this.currentTime;
+        this.lastTime;
+        this.lerpDuration = 3;
         this.xSize = xSize;
         this.ySize = ySize;
         this.color = color;
@@ -557,25 +721,84 @@ class Ship {
         this.moveComplete = false;
     }
 
+    lerp(start_value, end_value, pct) {
+        return (start_value + (end_value - start_value) * pct);
+    }
+
+    easeIn(t) {
+        return t * t;
+    }
+
+    easeOut(t) {
+        return this.flip(this.square(this.flip(t)));
+    }
+
+    easeInOut(t) {
+        return this.lerp(this.easeIn(t), this.easeOut(t), t);
+    }
+
+    flip(t) {
+        return 1 - t;
+    }
+
+    square(t) {
+        return t * t;
+    }
+
+    current_pct(start_value, end_value, current_value) {
+        // with each of these, what's the current % complete?
+        // answer:  (z - x) / (y - x)
+        // answerv2:  (cur - start) / (end - start);
+        return (current_value - start_value) / (end_value - start_value);
+    }
+
+    clearTime() {
+        this.timeElapsed = 0;
+        this.currentTime = 0;
+        this.lastTime = 0;
+    }
+
     moveDown() {
         // note that draw methods atm are based on xPOS.
-        let target = this.yPosI + 600;
-        if ((this.yPos + this.moveSpeed) < target) { 
-            this.yPos += this.moveSpeed;
+        let start_value = this.yPosI;
+        let end_value = this.yPosI + 600;
+        let current_value = this.yPos;
+
+        this.currentTime = Date.now();
+        this.timeElapsed += ((this.currentTime - this.lastTime) / 1000);
+        this.lastTime = Date.now();
+
+        let newY = this.lerp(start_value, end_value, this.easeInOut(this.timeElapsed / this.lerpDuration));
+
+        if (this.timeElapsed < this.lerpDuration) {
+            this.yPos = newY;
             this.moveComplete = false;
         } else {
-            this.yPos = target;
+            this.yPos = end_value;
             this.moveComplete = true;
         }
+        
     }
 
     moveUp() {
-        let target = this.yPosI;
-        if ((this.yPos - this.moveSpeed) > target) { 
-            this.yPos -= this.moveSpeed;
+        let start_value = this.yPosI + 600;
+        let end_value = this.yPosI;
+        let current_value = this.yPos;
+        // let current_percent = this.current_pct(start_value, end_value, current_value);
+
+        // let percent = current_percent + this.moveSpeed;
+
+        this.currentTime = Date.now();
+        this.timeElapsed += ((this.currentTime - this.lastTime) / 1000);
+        this.lastTime = Date.now();
+
+        let newY = this.lerp(start_value, end_value, this.easeInOut(this.timeElapsed / this.lerpDuration));
+
+        if (this.timeElapsed < this.lerpDuration) {
+            this.yPos = newY;
             this.moveComplete = false;
         } else {
-            this.yPos = target;
+            this.yPos = end_value;
             this.moveComplete = true;
         }
     }

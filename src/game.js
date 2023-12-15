@@ -28,12 +28,13 @@ class Game {
         this.tempSheep2;
         this.tempSheep3;
         this.tempSheep4;
-        this.sheepLeftToPlace = [1];
-        // this.sheepLeftToPlace = [1, 2, 3, 4, 5, 6];
+        // this.sheepLeftToPlace = [1];
+        this.sheepLeftToPlace = [1, 2, 3, 4, 5, 6];
         // this.sheepLeftToPlace = [1, 1, 1, 1, 1]
         this.sheepPositions = [];
         this.enemySheepPositions = [[0, 0], [2, 0], [4, 0]];
         this.enemyFoundPositions = [];
+
         this.firedPositions = [];
         this.buttons = [];
         this.enemyShips = [];

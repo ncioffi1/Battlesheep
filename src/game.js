@@ -2,6 +2,10 @@ console.log("im the game")
 
 var square = document.getElementById("square");
 
+const Square = require('./square.js');
+const Button = require('./button.js');
+const Sheep = require('./sheep.js');
+
 // const Asteroid = require('./asteroid.js')
 
 class Game {
@@ -28,14 +32,19 @@ class Game {
         this.tempSheep2;
         this.tempSheep3;
         this.tempSheep4;
-        // this.sheepLeftToPlace = [1];
-        this.sheepLeftToPlace = [1, 2, 3, 4, 5, 6];
-        // this.sheepLeftToPlace = [1, 1, 1, 1, 1]
+        this.sheepLeftToPlace = [6, 1, 2, 5, 1, 2];
+        this.computerLeftToPlace = [6, 1, 2, 5, 1, 2];
+
         this.sheepPositions = [];
-        this.enemySheepPositions = [[0, 0], [2, 0], [4, 0]];
+        this.playerFoundPositions = [];
+        
+        this.enemySheepPositions = [];
         this.enemyFoundPositions = [];
 
-        this.firedPositions = [];
+        this.enemyFiredPositions = [];
+        this.playerFiredPositions = [];
+       
+        
         this.buttons = [];
         this.enemyShips = [];
         this.enemyButtons = [];
@@ -45,8 +54,17 @@ class Game {
         this.activeTextString = "";
         this.activeTextString2 = "";
         this.activeTextString3 = "";
-        this.boardSize = 7;
+        this.sideButton2 = "randomize"
+        this.sideButton1 = "start game"
+        this.boardSize = 7;   // 7 works.
         this.draw();
+
+        this.bgmusic = new Audio("./assets/sounds/bamacountry.mp3");
+        this.cannon1 = new Audio("./assets/sounds/cannon1.mp3");
+        this.sheep1 = new Audio("./assets/sounds/sheep1.mp3");
+        this.tongue1 = new Audio("./assets/sounds/tongue1.mp3");
+
+        console.log(this.bgmusic);
     }
 
     // note this project uses febucci lerp functions found here:
@@ -84,7 +102,6 @@ class Game {
     }
     // creating a custom game update loop.
     play() {
-        // console.log(this.i);
         if (this.state === 0){
             if (this.altState === 0) {
                 this.altState = 1;
@@ -97,7 +114,6 @@ class Game {
                 })
 
                 this.layer3.addEventListener('mousemove', function(e) {
-                    // console.log("CLICK")
                     that.getHoverPosition(layer3, e)
                 })
 
@@ -105,7 +121,7 @@ class Game {
                 console.log("hello world");
 
                 this.ctx1.fillStyle = 'green';
-                this.ctx1.fillRect(0, 0, 800, 600)
+                this.ctx1.fillRect(0, 0, 800, 600);
                 
                 // this.ctx2.font = ("30px Arial");
                 // this.ctx2.fillStyle = "black";
@@ -118,20 +134,12 @@ class Game {
                 // generate game board
                 this.generateSquares(this.ctx3);
                 this.generateEnemySquares(this.ctx3);
-                this.spawnEnemySheep();
+                this.generateMenuButtons(this.ctx3);
 
-                this.generateTempSheep(that.sheepLeftToPlace[0]);
-
-                // generate game images
-
-                // generate game ship objects
-
-                // game is in "place your ships" state
-
+                this.spawnSheep("enemy");
+                this.spawnSheep("player");
+                console.log("spawned sheeps");
                 
-
-
-                console.log(this.altState);
             } else if (this.altState === 1) {
                 // tracking clicks.
                 if (this.clicked){
@@ -140,7 +148,18 @@ class Game {
 
                     this.buttons.forEach(function(button) {
                         if (button.buttonCheck(that.clickX, that.clickY)) {
-                            that.activeSheep.placeSheep(button.buttonPos);
+                            if (button.buttonType === "randomize") {
+                                that.clearSheep("player");
+                                that.spawnSheep("player");
+                                // createjs.Sound.stop();
+                                that.sheep1.pause;
+                                that.sheep1.currentTime = 0;
+                                that.sheep1.play();
+                            } else if (button.buttonType === "start") {
+                                that.altState = 2;
+                                that.bgmusic.play();
+                                that.bgmusic.loop = true;
+                            }
                         }
                     })
                 }
@@ -152,7 +171,7 @@ class Game {
                 this.buttons.forEach(function(button) {
                     if (button.buttonType === "ship") {
                         if (button.buttonCheck(that.hoverX, that.hoverY)) {
-                            that.activeSheep.hoverSheep(button.buttonPos);
+                            //that.activeSheep.hoverSheep(button.buttonPos);
                         } 
                     }  
                 })
@@ -166,6 +185,7 @@ class Game {
             } else if (this.altState === 3) {
                 if (this.moveShips("down")){
                     this.altState = 4;
+                    this.clicked = false;
                 }
             } else if (this.altState === 4){
                 this.activeTextString = "Fire Your Cannon";
@@ -176,31 +196,54 @@ class Game {
                 if (this.clicked){
                     this.clicked = false;
                     let that = this;
+                    let goAgain = false;
+                    let firedOnASquare = false;
 
+                    // player:  PLAYER
                     this.enemyButtons.forEach(function(button) {
                         if (button.buttonCheck(that.clickX, that.clickY)) {
                             if (button.buttonType === "ship") {
-                                if (!that.hasBeenFired(button.buttonPos)){
+                                if (!that.hasBeenFired("player", button.buttonPos)){
                                     // firing upon square.
-                                    that.altState = 5;
+                                    firedOnASquare = true;
                                     button.fire();    // change status of ele to fired
-                                    that.firedPositions.push(button.buttonPos);    // add pos to firedpositions
-                                    if (that.checkIfFoundSheep(button.buttonPos)) { // if sheep is there add to foundsheep array
-                                        // if sheep is complete,
-                                        // reveal squares around sheep.
-                                        that.revealAroundPosition(button.buttonPos)
-                                    }    
-                                    if (that.playerWon()) {
-                                        that.state = 1;
-                                        that.altState = 0;
-                                        that.activeTextString = "You Win!";
+                                    // player is firing.
+                                    that.playerFiredPositions.push(button.buttonPos);   
+                                    if (that.checkIfFoundSheep("player", button.buttonPos)) {
+                                        goAgain = true;
+                                    }
+
+                                    if (goAgain) {
+                                        that.cannon1.pause;
+                                        that.cannon1.currentTime = 0;
+                                        that.cannon1.play();
+
+                                        setTimeout(() => { 
+                                            that.tongue1.pause;
+                                            that.tongue1.currentTime = 0;
+                                            that.tongue1.play();
+                                        }, 500);
                                     } else {
-                                        that.altState = 5;
+                                        that.cannon1.pause;
+                                        that.cannon1.currentTime = 0;
+                                        that.cannon1.play();
                                     }
                                 }
                             }
                         }
                     })
+
+                    if (that.playerWon()) {
+                        that.state = 1;
+                        that.altState = 0;
+                        that.activeTextString = "You Win!";
+                    } else if (!goAgain) { // if you got a hit, go again.  otherwise switch turns.
+                        if (firedOnASquare) {
+                            that.altState = 5;
+                        }
+                    }
+                    console.log("goAgain is " + goAgain.toString());
+
                 }
 
                 // tracking hover.
@@ -224,11 +267,67 @@ class Game {
                     this.altState = 7;
                 }
             } else if (this.altState === 7) {
+                this.altState = 99;
+
                 // enemy makes move.
+                let options = this.generatePositionsForComputerFiring();
+                let goAgain = false;
 
+                let that = this;
 
-                // when done, set altState = 2;
-                this.altState = 2;
+                if (options.length === 0) {
+                    // computer wins!
+                    that.state = 1;
+                    that.altState = 0;
+                    that.activeTextString = "Computer Wins!";
+                } else {
+                    let random = Math.floor(Math.random() * options.length);  // pick a random one.
+                    let random_pos = options[random];
+
+                    // player:  ENEMY
+                    this.buttons.forEach(function(button) {
+                        if (button.buttonPos[0] === random_pos[0] && button.buttonPos[1] === random_pos[1]) {
+                            if (button.buttonType === "ship") {
+                                if (!that.hasBeenFired("enemy", button.buttonPos)){
+                                    button.fire();    // change status of ele to fired
+                                    // enemy is firing.
+                                    that.enemyFiredPositions.push(button.buttonPos);   
+                                    if (that.checkIfFoundSheep("enemy", button.buttonPos)) {
+                                        goAgain = true;
+                                    }
+
+                                    if (goAgain) {
+                                        that.cannon1.pause;
+                                        that.cannon1.currentTime = 0;
+                                        that.cannon1.play();
+
+                                        setTimeout(() => { 
+                                            that.tongue1.pause;
+                                            that.tongue1.currentTime = 0;
+                                            that.tongue1.play();
+                                        }, 500);
+                                    } else {
+                                        that.cannon1.pause;
+                                        that.cannon1.currentTime = 0;
+                                        that.cannon1.play();
+                                    }
+                                }
+                            }
+                        }
+                    })
+
+                    if (that.computerWon()) {
+                        that.state = 1;
+                        that.altState = 0;
+                        that.activeTextString = "Computer Wins!";
+                    } else if (!goAgain) { // if you got a hit, go again.  otherwise switch turns.
+                        setTimeout(() => { this.altState = 2 }, 1000);
+                        // that.altState = 2;
+                    } else {
+                        setTimeout(() => { this.altState = 7 }, 1000);
+                    }
+                    console.log("goAgain is " + goAgain.toString());
+                }
             }
         } else if (this.state === 1){
             if (this.altState === 0){
@@ -239,6 +338,29 @@ class Game {
         this.i += 1;
         // run the callback loop.
         requestAnimationFrame(this.play);
+    }
+
+    generateMenuButtons() {
+        let start_button = new Button("N/A", 651, 751, 518, 477, "start", "N/A")
+        let randomize_button = new Button("N/A", 651, 751, 443, 401, "randomize", "N/A")
+
+        this.buttons.push(start_button);
+        this.buttons.push(randomize_button);
+    }
+
+    // enemy is firing.
+    generatePositionsForComputerFiring() {
+        let positions = [];
+
+        for (let i = 0; i < this.boardSize; i++){
+            for (let j = 0; j < this.boardSize; j++){
+                if (!JSON.stringify(this.enemyFiredPositions).includes([i, j])) {
+                    // if the PLAYER hasn't already fired on this position, add it.
+                    positions.push([i, j]);
+                }
+            }
+        }
+        return positions;
     }
 
     clearTempSheep() {
@@ -264,6 +386,13 @@ class Game {
         return false;
     }
 
+    computerWon() {
+        if (this.sheepPositions.length === this.playerFoundPositions.length) {
+            return true;
+        }
+        return false;
+    }
+
     checkIfHasSheep(pos) {
         if (JSON.stringify(this.enemySheepPositions).includes(pos)) {
             return true;
@@ -271,16 +400,53 @@ class Game {
         return false;
     }
 
-    checkIfFoundSheep(pos) {
-        if (JSON.stringify(this.enemySheepPositions).includes(pos)) {
-            console.log("FOUND SHEEP!")
-            this.enemyFoundPositions.push(pos);
-            return true;
+    checkIfFoundSheep(playerType, pos) {
+        if (playerType === "player") {
+            if (JSON.stringify(this.enemySheepPositions).includes(pos)) {
+                this.enemyFoundPositions.push(pos);
+    
+                // sheep logic.
+                let that = this;
+                let foundPart = false;
+                this.enemySheeps.forEach(function(enemySheep) {
+                    if (enemySheep.checkIfFoundPart(pos)) {
+                        foundPart = true;
+                    }
+    
+                    if (enemySheep.isSheepFound()) {
+                        enemySheep.sheepPartPositions.forEach(function(_pos) {
+                            that.revealAroundPosition("player", _pos);
+                        })
+                    }
+                })
+    
+                return foundPart;
+            }
+        } else if (playerType === "enemy") {
+            if (JSON.stringify(this.sheepPositions).includes(pos)) {
+                this.playerFoundPositions.push(pos);
+    
+                // sheep logic.
+                let that = this;
+                let foundPart = false;
+                this.playerSheeps.forEach(function(playerSheep) {
+                    if (playerSheep.checkIfFoundPart(pos)) {
+                        foundPart = true;
+                    }
+    
+                    if (playerSheep.isSheepFound()) {
+                        playerSheep.sheepPartPositions.forEach(function(_pos) {
+                            that.revealAroundPosition("enemy", _pos);
+                        })
+                    }
+                })
+    
+                return foundPart;
+            }
         }
-        return false;
     }
 
-    revealAroundPosition(pos){
+    revealAroundPosition(playerType, pos){
         let x = pos[0];
         let y = pos[1];
         let positions = [];
@@ -293,17 +459,28 @@ class Game {
             }
         }
         let that = this;
-        console.log(positions);
-        this.enemyButtons.forEach(function(button){
-            // console.log(positions);
-            if (JSON.stringify(positions).includes(button.buttonPos)){
-                console.log("firing.");
-                button.fire();
-                if (!JSON.stringify(that.firedPositions).includes(button.buttonPos)){
-                    that.firedPositions.push(button.buttonPos);
+        if (playerType === "player") {
+            this.enemyButtons.forEach(function(button){
+                if (JSON.stringify(positions).includes(button.buttonPos)){
+                    button.fire();
+                    // check positions player has fired on.
+                    if (!JSON.stringify(that.playerFiredPositions).includes(button.buttonPos)){
+                        that.playerFiredPositions.push(button.buttonPos);
+                    }
                 }
-            }
-        })
+            })
+        } else if (playerType === "enemy") {
+            this.buttons.forEach(function(button){
+                if (JSON.stringify(positions).includes(button.buttonPos)){
+                    button.fire();
+                    // check positions enemy has fired on.
+                    if (!JSON.stringify(that.enemyFiredPositions).includes(button.buttonPos)){
+                        that.enemyFiredPositions.push(button.buttonPos);
+                    }
+                }
+            })
+        }
+        
     }
 
     queueMoveShips(){
@@ -375,22 +552,47 @@ class Game {
         return false;
     }
 
-    hasBeenFired(pos) {
-        if (JSON.stringify(this.firedPositions).includes(pos)){
-            return true;
+
+    hasBeenFired(playerType, pos) {
+        if (playerType === "enemy") {
+            if (JSON.stringify(this.enemyFiredPositions).includes(pos)){
+                return true;
+            }
+        } else if (playerType === "player") {
+            if (JSON.stringify(this.playerFiredPositions).includes(pos)){
+                return true;
+            }
         }
         return false;
     }
 
-    validSpotToPlace(pos) {
+    validSpotToPlace(playerType, pos, myInvalidPositions, logForPlayer) {
+        if (myInvalidPositions === undefined){
+            if (playerType === "player"){
+                myInvalidPositions = this.sheepPositions;
+            } else if (playerType === "enemy"){
+                myInvalidPositions = this.enemySheepPositions;
+            }
+        }
+        if (logForPlayer === undefined) {
+            logForPlayer = false;
+        }
         // check if surrounding squares have sheep.
         if (pos[0] < 0 || pos[0] > (this.boardSize - 1)) {
-            this.activeTextString2 = "Invalid Position:"  
-            this.activeTextString3 = "Position was off board!";
+            if (playerType === "player") {
+                if (logForPlayer) {
+                    this.activeTextString2 = "Invalid Position:"  
+                    this.activeTextString3 = "Position was off board!";
+                }
+            }
             return false;
         } else if (pos[1] < 0 || pos[1] > (this.boardSize - 1)) {
-            this.activeTextString2 = "Invalid Position:"  
-            this.activeTextString3 = "Position was off board!";
+            if (playerType === "player") {
+                if (logForPlayer){
+                    this.activeTextString2 = "Invalid Position:"  
+                    this.activeTextString3 = "Position was off board!";
+                }
+            }
             return false;
         }
         
@@ -401,14 +603,22 @@ class Game {
                 let x = pos[0] + i;
                 let y = pos[1] + j;
                 let _pos = [x, y];
-                // console.log(_pos)
-                // console.log(this.sheepPositions)
-                // console.log(this.sheepPositions.includes(_pos))
-                if (JSON.stringify(this.sheepPositions).includes(_pos)){
-                    this.activeTextString2 = "Invalid Position:"  
-                    this.activeTextString3 = "Position too close to another sheep!";
-                    return false;
-                }                
+
+                if (playerType === "player"){
+                    if (JSON.stringify(myInvalidPositions).includes(_pos)){
+                        if (logForPlayer){
+                            this.activeTextString2 = "Invalid Position:"  
+                            this.activeTextString3 = "Position too close to another sheep!";
+                        }
+                        return false;
+                    }  
+                } else if (playerType === "enemy") {
+                    if (JSON.stringify(myInvalidPositions).includes(_pos)){
+                        // this.activeTextString2 = "Invalid Position:"  
+                        // this.activeTextString3 = "Position too close to another sheep!";
+                        return false;
+                    }  
+                }          
             }
         }
         return true;
@@ -420,7 +630,7 @@ class Game {
             for (let j = 0; j < size; j++){
                 let xPos = 400 - ((Math.floor(size / 2)) * 50) + (i * 50);
                 let yPos = 200 + (j * 50);
-                let ship = new Ship(ctx, xPos, yPos, 50, 50, "blank", "empty");
+                let ship = new Square(ctx, xPos, yPos, 50, 50, "blank", "empty");
                 this.ships.push(ship);
                 let x_left = xPos - 20;
                 let x_right = xPos + 20;
@@ -438,7 +648,7 @@ class Game {
             for (let j = 0; j < size; j++){
                 let xPos = 400 - ((Math.floor(size / 2)) * 50) + (i * 50);
                 let yPos = 200 - 600 + (j * 50);
-                let ship = new Ship(ctx, xPos, yPos, 50, 50, "blank", "empty");
+                let ship = new Square(ctx, xPos, yPos, 50, 50, "blank", "empty");
                 this.enemyShips.push(ship);
                 let x_left = xPos - 20;
                 let x_right = xPos + 20;
@@ -457,59 +667,198 @@ class Game {
             let xPos = 400 + xMod;
             let yPos = 125 + yMod;
 
-            this.tempSheep = new Ship(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
-            this.activeSheep = new Sheep(this, [[0, 0]]);
+            this.tempSheep = new Square(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
+            
         } else if (id === 2) {
             let xPos = 375 + xMod;
             let yPos = 125 + yMod;
 
-            this.tempSheep = new Ship(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
-            this.tempSheep2 = new Ship(this.ctx3, xPos + 50, yPos, 50, 50, "body", "sheep");
-            this.activeSheep = new Sheep(this, [[0, 0], [1, 0]]);
+            this.tempSheep = new Square(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
+            this.tempSheep2 = new Square(this.ctx3, xPos + 50, yPos, 50, 50, "body", "sheep");
+            
         } else if (id === 3) {
             let xPos = 350 + xMod;
             let yPos = 125 + yMod;
 
-            this.tempSheep = new Ship(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
-            this.tempSheep2 = new Ship(this.ctx3, xPos + 50, yPos, 50, 50, "body", "sheep");
-            this.tempSheep3 = new Ship(this.ctx3, xPos + 100, yPos, 50, 50, "body", "sheep");
-            this.activeSheep = new Sheep(this, [[0, 0], [1, 0], [2, 0]]);
+            this.tempSheep = new Square(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
+            this.tempSheep2 = new Square(this.ctx3, xPos + 50, yPos, 50, 50, "body", "sheep");
+            this.tempSheep3 = new Square(this.ctx3, xPos + 100, yPos, 50, 50, "body", "sheep");
+           
         } else if (id === 4) {
             let xPos = 325 + xMod;
             let yPos = 125 + yMod;
 
-            this.tempSheep = new Ship(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
-            this.tempSheep2 = new Ship(this.ctx3, xPos + 50, yPos, 50, 50, "body", "sheep");
-            this.tempSheep3 = new Ship(this.ctx3, xPos + 100, yPos, 50, 50, "body", "sheep");
-            this.tempSheep4 = new Ship(this.ctx3, xPos + 150, yPos, 50, 50, "body", "sheep");
-            this.activeSheep = new Sheep(this, [[0, 0], [1, 0], [2, 0], [3, 0]]);
+            this.tempSheep = new Square(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
+            this.tempSheep2 = new Square(this.ctx3, xPos + 50, yPos, 50, 50, "body", "sheep");
+            this.tempSheep3 = new Square(this.ctx3, xPos + 100, yPos, 50, 50, "body", "sheep");
+            this.tempSheep4 = new Square(this.ctx3, xPos + 150, yPos, 50, 50, "body", "sheep");
+            
         } else if (id === 5) {
             let xPos = 375 + xMod;
             let yPos = 100 + yMod;
 
-            this.tempSheep = new Ship(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
-            this.tempSheep2 = new Ship(this.ctx3, xPos + 50, yPos, 50, 50, "body", "sheep");
-            this.tempSheep3 = new Ship(this.ctx3, xPos + 50, yPos + 50, 50, 50, "body", "sheep");
-            this.activeSheep = new Sheep(this, [[0, 0], [1, 0], [1, 1]]);
+            this.tempSheep = new Square(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
+            this.tempSheep2 = new Square(this.ctx3, xPos + 50, yPos, 50, 50, "body", "sheep");
+            this.tempSheep3 = new Square(this.ctx3, xPos + 50, yPos + 50, 50, 50, "body", "sheep");
+            
         } else if (id === 6) {
             let xPos = 350 + xMod;
             let yPos = 100 + yMod;
 
-            this.tempSheep = new Ship(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
-            this.tempSheep2 = new Ship(this.ctx3, xPos + 50, yPos, 50, 50, "body", "sheep");
-            this.tempSheep3 = new Ship(this.ctx3, xPos + 100, yPos, 50, 50, "body", "sheep");
-            this.tempSheep4 = new Ship(this.ctx3, xPos + 50, yPos + 50, 50, 50, "body", "sheep");
-            this.activeSheep = new Sheep(this, [[0, 0], [1, 0], [2, 0], [1, 1]] );
+            this.tempSheep = new Square(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
+            this.tempSheep2 = new Square(this.ctx3, xPos + 50, yPos, 50, 50, "body", "sheep");
+            this.tempSheep3 = new Square(this.ctx3, xPos + 100, yPos, 50, 50, "body", "sheep");
+            this.tempSheep4 = new Square(this.ctx3, xPos + 50, yPos + 50, 50, 50, "body", "sheep");
+
+            
+        }
+        this.activeSheep = this.generateActiveSheep(id);
+    }
+
+    generateActiveSheep(id) {
+        if (id === 1){
+            return new Sheep(this, [[0, 0]]);
+        } else if (id === 2) {
+            return new Sheep(this, [[0, 0], [1, 0]]);
+        } else if (id === 3) {
+            return new Sheep(this, [[0, 0], [1, 0], [2, 0]]);
+        } else if (id === 4) {
+            return new Sheep(this, [[0, 0], [1, 0], [2, 0], [3, 0]]);
+        } else if (id === 5) {
+            return new Sheep(this, [[0, 0], [1, 0], [1, 1]]);
+        } else if (id === 6) {
+            return new Sheep(this, [[0, 0], [1, 0], [2, 0], [1, 1]] );
         }
     }
 
-    spawnEnemySheep() {
+    clearSheep(playerType) {
+        if (playerType === "player"){
+            this.playerSheeps = [];
+            this.sheepPositions = [];
+            this.buttons.forEach(function(button) {
+                if (button.buttonType === "ship") {
+                    button.clear();
+                }
+            })
+        } else if (playerType === "enemy") {
+            this.enemySheeps = [];
+            this.enemySheepPositions = [];
+            this.enemyButtons.forEach(function(button) {
+                if (button.buttonType === "ship") {
+                    button.clear();
+                }
+            })
+        }
+    }
+
+    spawnSheep(playerType){
         let that = this;
-        this.enemyButtons.forEach(function(button) {
-            if (that.checkIfHasSheep(button.buttonPos)){
-                button.place("sheep_hidden", "head")
+        let l = 0;
+        let myLeftToPlace = [];
+        if (playerType === "player"){
+            l = this.sheepLeftToPlace.length;
+            myLeftToPlace = JSON.parse(JSON.stringify(this.sheepLeftToPlace));
+        } else if (playerType === "enemy") {
+            l = this.computerLeftToPlace.length;
+            myLeftToPlace = JSON.parse(JSON.stringify(this.computerLeftToPlace));
+        }
+        let placingComplete = false;
+        let iterations = 0;
+        let q = 0;
+
+        while (!placingComplete) {
+            placingComplete = true;
+
+            if (q < l) {
+                this.activeSheep = this.generateActiveSheep(myLeftToPlace[q]);
+                
+                let positions = this.generatePossiblePositionArray(playerType);
+                if (positions.length === 0) {  // if theres no possible positions,
+                    iterations += 1;
+                    q = 0;
+                    this.clearSheep(playerType);
+                } else {
+                    let random = Math.floor(Math.random() * positions.length);  // pick a random one.
+                    let random_pos = positions[random];
+                    if (playerType === "player"){
+                        this.playerSheeps.push(this.activeSheep);
+                        this.activeSheep.placeSheep("player", random_pos);
+                    } else if (playerType === "enemy"){
+                        this.enemySheeps.push(this.activeSheep);   // add the sheep to the enemy sheeps list.
+                        this.activeSheep.placeSheep("enemy", random_pos);  // add the positions of the sheep to enemySheepPositions.
+                    }
+                    q += 1;
+                }
+                placingComplete = false;
+            } else {
+                placingComplete = true;
             }
-        })
+        }
+
+        if (playerType === "player"){
+            console.log("              ")
+            console.log("--------------")
+            console.log("- debug tool -")
+            console.log("--------------")
+            console.log("Completed Placing Player Sheep!");
+            console.log("Total Iteration Cycles:  " + iterations.toString());
+            console.log("--------------")
+            console.log("Player left to place:  " + this.sheepLeftToPlace.length.toString());
+            console.log("Sheep Positions Length:  " + this.sheepPositions.length.toString());
+            console.log("Sheep Positions:  ");
+            console.log(this.sheepPositions);
+            console.log("Player Sheeps:  " + this.playerSheeps.toString());
+            console.log("sheep placed");
+        } else if (playerType === "enemy"){
+            console.log("              ")
+            console.log("--------------")
+            console.log("- debug tool -")
+            console.log("--------------")
+            console.log("Completed Placing Enemy Sheep!");
+            console.log("Total Iteration Cycles:  " + iterations.toString());
+            console.log("--------------")
+            console.log("Computer left to place:  " + this.computerLeftToPlace.length.toString());
+            console.log("Enemy Sheep Positions Length:  " + this.enemySheepPositions.length.toString());
+            console.log("Enemy Sheep Positions:  ");
+            console.log(this.enemySheepPositions);
+            console.log("Enemy Sheeps:  " + this.enemySheeps.toString());
+            console.log("sheep placed");
+        }
+    }
+
+
+    generatePossiblePositionArray(playerType, mySheep, myInvalidPositions) {
+        let positions = []
+        let that = this;
+        if (myInvalidPositions === undefined){
+            if (playerType === "player") {
+                myInvalidPositions = this.sheepPositions;
+            } else {
+                myInvalidPositions = this.enemySheepPositions;
+            }
+        }
+        if (mySheep === undefined){
+            mySheep = this.activeSheep;
+        }
+
+        for (let i = 0; i < this.boardSize; i++) {
+            for (let j = 0; j < this.boardSize; j++) {
+                let valid = true;
+                mySheep.sheepShapes.forEach(function(shape) {
+                    let _x = i + shape[0];
+                    let _y = j + shape[1];
+                    let _pos = [_x, _y];
+                    if (!that.validSpotToPlace(playerType, _pos, myInvalidPositions)) {
+                        valid = false;
+                    }
+                   
+                })
+                if (valid){
+                    positions.push([i, j]);
+                }
+            }
+        }
+        return positions;
     }
 
     draw() {
@@ -537,6 +886,22 @@ class Game {
         this.ctx3.textAlign = "center";
         this.ctx3.fillText(this.activeTextString3, 400, 100);
 
+        this.ctx3.fillStyle = 'gray';
+        this.ctx3.fillRect(650, 475, 100, 40);
+
+        this.ctx3.fillStyle = 'gray';
+        this.ctx3.fillRect(650, 400, 100, 40);
+
+        this.ctx3.font = ("16px Arial");
+        this.ctx3.fillStyle = "black";
+        this.ctx3.textAlign = "center";
+        this.ctx3.fillText(this.sideButton1, 700, 500);
+
+        this.ctx3.font = ("16px Arial");
+        this.ctx3.fillStyle = "black";
+        this.ctx3.textAlign = "center";
+        this.ctx3.fillText(this.sideButton2, 700, 425);
+
         this.ships.forEach(function(ship) {
             ship.draw();
         });
@@ -562,369 +927,5 @@ class Game {
         requestAnimationFrame(this.draw);
     }
 }
-
-class Sheep {
-    // this object will store each position making up
-    // a Sheep.
-    constructor(game, sheepShapes) {
-        this.sheepPartPositions = []
-        this.game = game;
-        this.size = this.sheepPartPositions.length;
-        this.sheepPartsFound = [];
-        this.sheepHeadPos;
-        this.sheepShapes = sheepShapes;
-    }
-
-    setSheepPartPositions(positions) {
-        this.sheepPartPositions = positions;
-    }
-
-    // sheepShape starts at 0,0.
-    // sheepshape options.
-    // [[0, 0]];
-    // [[0, 0], [1, 0]]                 |  [[0, 0], [0, 1]]
-    // [[0, 0], [1, 0], [2, 0]]         |  [[0, 0], [0, 1], [0, 2]]
-    // [[0, 0], [1, 0], [2, 0], [3, 0]] |  [[0, 0], [0, 1], [0, 2], [0, 3]]
-    // [[0, 0], [1, 0], [1, 1]]         |  [[1, 0], [1, 1], [0, 1]]         |  [[1, 1], [0, 1], [0, 0]          |  [0, 1], [0, 0], [1, 0]]
-    // [[0, 0], [1, 0], [2, 0], [1, 1]] |  [[0, 0], [0, 1], [0, 2], [1, 1]] |  [[1, 0] [0, 1] [1, 1] [2, 1]]    |  [[1, 0] [0, 1] [1, 1] [1, 2]]
-    hoverSheep(pos){
-        let hoverPositions = [];
-        let that = this;
-        this.sheepShapes.forEach(function(sheepShape) {
-            let _x = pos[0] + sheepShape[0];
-            let _y = pos[1] + sheepShape[1];
-            let _pos = [_x, _y];
-            hoverPositions.push(_pos);
-        })
-
-        this.game.buttons.forEach(function(button){
-            if (button.buttonType === "ship") {
-                if (JSON.stringify(hoverPositions).includes(button.buttonPos)){
-                    button.hover();
-                } else {
-                    button.blank();
-                }
-            }
-        })
-    }
-
-    placeSheep(pos){
-        let placePositions = [];
-        let that = this;
-        this.sheepShapes.forEach(function(sheepShape) {
-            let _x = pos[0] + sheepShape[0];
-            let _y = pos[1] + sheepShape[1];
-            let _pos = [_x, _y];
-            placePositions.push(_pos);
-        })
-
-        let checkValid = true;
-
-        placePositions.forEach(function(placePosition) {
-            if (!that.game.validSpotToPlace(placePosition)) {
-                checkValid = false;
-            }
-        })
-
-        if (checkValid){
-            this.game.buttons.forEach(function(button) {
-                if (button.buttonType === "ship") {
-                    if (JSON.stringify(placePositions).includes(button.buttonPos)) {
-                        if (button.buttonPos.toString() === placePositions[0].toString()) {
-                            button.placeSheepHead();
-                        } else {
-                            button.placeSheepBody();
-                        }
-                        that.game.sheepPositions.push(button.buttonPos);
-                    }
-                }
-            })
-
-            that.game.sheepLeftToPlace.shift();
-            that.game.clearTempSheep();
-            that.game.activeTextString2 = "";
-            that.game.activeTextString3 = "";
-
-            if (that.game.sheepLeftToPlace.length > 0) {
-                that.game.generateTempSheep(that.game.sheepLeftToPlace[0]);
-            } else {
-                that.game.altState = 2;
-            }
-        } else {
-            // that.game.activeTextString2 = "invalid position\nposition was off board";
-            console.log("invalid position...");
-        }
-    }
-
-
-    isSheepFound() {
-        if (this.sheepPartsFound.length === this.size) {
-            return true;
-        }
-        return false;
-    }
-
-    foundPart(pos){
-        // is this pos part of sheep?
-        if (JSON.stringify(this.sheepPartPositions).includes(pos)){
-            // did you find this part already?
-            if (!JSON.stringify(this.sheepPartsFound).includes(pos)){
-                // add part to sheepPartsFound
-                this.sheepPartsFound.push(pos);
-            }
-        }
-    }
-}
-
-class Ship {
-    constructor(context, xPos, yPos, xSize, ySize, color, type) {
-        this.context = context;
-        this.xPos = xPos;
-        this.yPos = yPos;
-        this.xPosI = xPos;
-        this.yPosI = yPos;
-        // this.moveSpeed = 5;
-        // this.moveSpeed = 0.01;
-        this.timeSpeed = 0.01;
-        this.timeElapsed = 0;
-        this.currentTime;
-        this.lastTime;
-        this.lerpDuration = 3;
-        this.xSize = xSize;
-        this.ySize = ySize;
-        this.color = color;
-        this.type = type;
-        this.hoverState = "blank";
-        this.queueClear = false;
-        this.filepath = "";
-        this.draw = this.draw.bind(this)
-        this.draw();
-        this.moveComplete = true;
-        this.doNotHoverTypes = ["sheep", "fired"]
-    }
-
-    // type choices:
-    //* "empty"
-    //* "sheep"
-    //* "sheep_hidden"
-    //* "fired"
-
-    // color choices:
-    //* "head"
-    //* "body"
-    //* "empty"
-
-    //* hoverState choices:
-    //* "blank"
-    //* "hover"
-
-    queueMove() {
-        this.moveComplete = false;
-    }
-
-    lerp(start_value, end_value, pct) {
-        return (start_value + (end_value - start_value) * pct);
-    }
-
-    easeIn(t) {
-        return t * t;
-    }
-
-    easeOut(t) {
-        return this.flip(this.square(this.flip(t)));
-    }
-
-    easeInOut(t) {
-        return this.lerp(this.easeIn(t), this.easeOut(t), t);
-    }
-
-    flip(t) {
-        return 1 - t;
-    }
-
-    square(t) {
-        return t * t;
-    }
-
-    current_pct(start_value, end_value, current_value) {
-        // with each of these, what's the current % complete?
-        // answer:  (z - x) / (y - x)
-        // answerv2:  (cur - start) / (end - start);
-        return (current_value - start_value) / (end_value - start_value);
-    }
-
-    clearTime() {
-        this.timeElapsed = 0;
-        this.currentTime = 0;
-        this.lastTime = 0;
-    }
-
-    moveDown() {
-        // note that draw methods atm are based on xPOS.
-        let start_value = this.yPosI;
-        let end_value = this.yPosI + 600;
-        let current_value = this.yPos;
-
-        this.currentTime = Date.now();
-        this.timeElapsed += ((this.currentTime - this.lastTime) / 1000);
-        this.lastTime = Date.now();
-
-        let newY = this.lerp(start_value, end_value, this.easeInOut(this.timeElapsed / this.lerpDuration));
-
-        if (this.timeElapsed < this.lerpDuration) {
-            this.yPos = newY;
-            this.moveComplete = false;
-        } else {
-            this.yPos = end_value;
-            this.moveComplete = true;
-        }
-        
-    }
-
-    moveUp() {
-        let start_value = this.yPosI + 600;
-        let end_value = this.yPosI;
-        let current_value = this.yPos;
-        // let current_percent = this.current_pct(start_value, end_value, current_value);
-
-        // let percent = current_percent + this.moveSpeed;
-
-        this.currentTime = Date.now();
-        this.timeElapsed += ((this.currentTime - this.lastTime) / 1000);
-        this.lastTime = Date.now();
-
-        let newY = this.lerp(start_value, end_value, this.easeInOut(this.timeElapsed / this.lerpDuration));
-
-        if (this.timeElapsed < this.lerpDuration) {
-            this.yPos = newY;
-            this.moveComplete = false;
-        } else {
-            this.yPos = end_value;
-            this.moveComplete = true;
-        }
-    }
-
-    setColor(newColor) {
-        this.color = newColor;
-    }
-
-    setType(newType){
-        this.type = newType;
-    }
-
-    setHoverState(newHoverState){
-        this.hoverState = newHoverState;
-    }
-
-    draw() {
-        let filepath = ""
-        if (this.type === "sheep"){
-            if (this.color === "head") {
-                filepath = 'assets/sheep_head.png'
-            } else if (this.color === "body") {
-                filepath = 'assets/sheep_body.png'
-            }
-        } else if (this.type === "fired") {
-            if (this.color === "head") {
-                filepath = 'assets/sheep_found_head.png'
-            } else if (this.color === "body") {
-                filepath = 'assets/sheep_found_body.png'
-            } else {
-                filepath = 'assets/square_empty.png'
-            }
-        } else {
-            if (this.hoverState === "blank") {
-                filepath = 'assets/square_outline.png'
-            } else if (this.hoverState === "hover") {
-                filepath = 'assets/square_outline_transparent.png'
-            }
-
-            // if (this.color === "blank"){
-            //     filepath = 'assets/square_outline.png'
-            // } else if (this.color === "hover"){
-            //     filepath = 'assets/square_outline_transparent.png'
-            // }
-        }
-
-        if (this.filepath !== filepath){
-            this.setImageInCanvas(this.context, filepath, this.xPos, this.yPos, this.xSize, this.ySize)
-        }
-        this.context.drawImage(this.image, (this.xPos - this.xSize/2), (this.yPos - this.ySize/2), this.xSize, this.ySize)
-
-    }
-
-    setImageInCanvas(context, filepath, xPos, yPos, xSize, ySize) {
-        var img1 = new Image();
-        //drawing of the test image - img1
-        // img1.onload = () => {
-        //     context.drawImage(img1, (xPos - xSize/2), (yPos - ySize/2), xSize, ySize);
-        // };
-        img1.src = filepath;
-        this.image = img1;
-    }
-}
-
-class Button {
-    constructor(element, xLeft, xRight, yTop, yBot, buttonType, buttonPos) {
-        this.element = element;
-        this.xLeft = xLeft;
-        this.xRight = xRight;
-        this.yTop = yTop;
-        this.yBot = yBot;
-        this.buttonType = buttonType;
-        this.buttonPos = buttonPos;
-    }
-
-    // checks if you pressed the button.
-    buttonCheck(x_value, y_value) {
-        if (x_value > this.xLeft && x_value < this.xRight) {
-            if (y_value > this.yBot && y_value < this.yTop) {
-                return true
-            }
-        }
-
-        return false
-    }
-
-    place(type, color) {
-        this.element.setType(type);
-        this.element.setColor(color);
-    }
-
-    placeSheepHead() {
-        this.element.setType("sheep");
-        this.element.setColor("head");
-    }
-
-    placeSheepBody() {
-        this.element.setType("sheep");
-        this.element.setColor("body");
-    }
-
-    fire(){
-        this.element.setType("fired");
-        // if (this.element.type === "sheep" || this.element.type === "sheep_hidden"){
-
-        // }
-    }
-
-    hover() {
-        // if (!this.element.doNotHoverTypes.includes(this.element.type)) {
-        //     this.element.setColor("hover");
-        // }
-
-        if (!this.element.doNotHoverTypes.includes(this.element.type)) {
-            this.element.setHoverState("hover");
-        }
-        
-    }
-
-    blank() {
-        if (!this.element.doNotHoverTypes.includes(this.element.type)){
-            this.element.setHoverState("blank");
-        }
-    }
-}
-
 
 module.exports = Game;

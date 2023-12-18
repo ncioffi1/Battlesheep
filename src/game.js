@@ -64,6 +64,8 @@ class Game {
         this.sheep1 = new Audio("./assets/sounds/sheep1.mp3");
         this.tongue1 = new Audio("./assets/sounds/tongue1.mp3");
 
+        this.drawCall = 0;
+        this.playCall = 0;
         console.log(this.bgmusic);
     }
 
@@ -118,15 +120,14 @@ class Game {
                 })
 
                 // generate game assets
-                console.log("hello world");
+                console.log("boop beep");
+                // this.playCall += 1;
+                // console.log("PLAY CALL:  " + playCall.toString());
 
                 this.ctx1.fillStyle = 'green';
                 this.ctx1.fillRect(0, 0, 800, 600);
                 
-                // this.ctx2.font = ("30px Arial");
-                // this.ctx2.fillStyle = "black";
-                // this.ctx2.textAlign = "center";
-                // this.ctx2.fillText("Place Your Sheeps", 400, 50);
+                
                 this.activeTextString = "Place Your Sheeps"
                 this.activeTextString2 = "";
                 this.activeTextString3 = "";
@@ -336,6 +337,11 @@ class Game {
             }
         }
         this.i += 1;
+
+        this.playCall += 1;
+        if (this.playCall % 60 === 0) {
+            console.log("PLAY CALL:  " + this.playCall.toString());
+        }
         // run the callback loop.
         requestAnimationFrame(this.play);
     }
@@ -862,13 +868,14 @@ class Game {
     }
 
     draw() {
-        this.ctx3.save();
-        this.ctx3.globalCompositeOperation = 'copy';
-        this.ctx3.strokeStyle = 'transparent';
-        this.ctx3.beginPath();
-        this.ctx3.lineTo(0, 0);
-        this.ctx3.stroke();
-        this.ctx3.restore();
+        this.ctx3.clearRect(0, 0, 800, 600);
+        // this.ctx3.save();
+        // this.ctx3.globalCompositeOperation = 'copy';
+        // this.ctx3.strokeStyle = 'transparent';
+        // this.ctx3.beginPath();
+        // this.ctx3.lineTo(0, 0);
+        // this.ctx3.stroke();
+        // this.ctx3.restore();
 
         // draw text.  if errors put on own context.
         this.ctx3.font = ("30px Arial");
@@ -923,6 +930,12 @@ class Game {
             this.tempSheep4.draw();
         }
 
+
+        this.drawCall += 1;
+        if (this.drawCall % 60 === 0) {
+            console.log("DRAW CALL:  " + this.drawCall.toString());
+        }
+        
 
         requestAnimationFrame(this.draw);
     }

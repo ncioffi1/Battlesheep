@@ -57,6 +57,9 @@ class Game {
         this.sideButton2 = "randomize"
         this.sideButton1 = "start game"
         this.boardSize = 7;   // 7 works.
+
+        this.gameBG = new Square(ctx1, 400, 0, 800, 1200, "gameBG", "gameBG");
+
         this.draw();
 
         this.bgmusic = new Audio("./assets/sounds/bamacountry.mp3");
@@ -124,8 +127,10 @@ class Game {
                 // this.playCall += 1;
                 // console.log("PLAY CALL:  " + playCall.toString());
 
-                this.ctx1.fillStyle = 'green';
-                this.ctx1.fillRect(0, 0, 800, 600);
+                // this.ctx1.fillStyle = 'green';
+                // this.ctx1.fillRect(0, 0, 800, 600);
+
+                // new Square(ctx, xPos, yPos, 50, 50, "blank", "empty");
                 
                 
                 this.activeTextString = "Place Your Sheeps"
@@ -155,11 +160,11 @@ class Game {
                                 // createjs.Sound.stop();
                                 that.sheep1.pause;
                                 that.sheep1.currentTime = 0;
-                                that.sheep1.play();
+                                // that.sheep1.play();
                             } else if (button.buttonType === "start") {
                                 that.altState = 2;
-                                that.bgmusic.play();
-                                that.bgmusic.loop = true;
+                                // that.bgmusic.play();
+                                // that.bgmusic.loop = true;
                             }
                         }
                     })
@@ -217,17 +222,17 @@ class Game {
                                     if (goAgain) {
                                         that.cannon1.pause;
                                         that.cannon1.currentTime = 0;
-                                        that.cannon1.play();
+                                        // that.cannon1.play();
 
                                         setTimeout(() => { 
                                             that.tongue1.pause;
                                             that.tongue1.currentTime = 0;
-                                            that.tongue1.play();
+                                            // that.tongue1.play();
                                         }, 500);
                                     } else {
                                         that.cannon1.pause;
                                         that.cannon1.currentTime = 0;
-                                        that.cannon1.play();
+                                        // that.cannon1.play();
                                     }
                                 }
                             }
@@ -300,17 +305,17 @@ class Game {
                                     if (goAgain) {
                                         that.cannon1.pause;
                                         that.cannon1.currentTime = 0;
-                                        that.cannon1.play();
+                                        // that.cannon1.play();
 
                                         setTimeout(() => { 
                                             that.tongue1.pause;
                                             that.tongue1.currentTime = 0;
-                                            that.tongue1.play();
+                                            // that.tongue1.play();
                                         }, 500);
                                     } else {
                                         that.cannon1.pause;
                                         that.cannon1.currentTime = 0;
-                                        that.cannon1.play();
+                                        // that.cannon1.play();
                                     }
                                 }
                             }
@@ -500,6 +505,9 @@ class Game {
             ship.queueMove();
             ship.clearTime();
         })
+
+        this.gameBG.queueMove();
+        this.gameBG.clearTime();
     }
 
     moveShips(direction) {
@@ -548,6 +556,27 @@ class Game {
                 }
             }
         })
+
+        if (!this.gameBG.moveComplete) {
+            if (direction === "down"){
+                if (this.gameBG.currentTime === 0) {
+                    this.gameBG.currentTime = Date.now();
+                    this.gameBG.lastTime = Date.now();
+                } else {
+                    this.gameBG.moveDown();
+                }
+                that.done = false;
+            } else if (direction === "up") {
+                if (this.gameBG.currentTime === 0) {
+                    this.gameBG.currentTime = Date.now();
+                    this.gameBG.lastTime = Date.now();
+                } else {
+                    this.gameBG.moveUp();
+                }
+                that.done = false;
+            }
+        }
+
         return that.done;
     }
 
@@ -868,6 +897,9 @@ class Game {
     }
 
     draw() {
+        this.ctx1.clearRect(0, 0, 800, 600);
+        this.gameBG.draw();
+
         this.ctx3.clearRect(0, 0, 800, 600);
         // this.ctx3.save();
         // this.ctx3.globalCompositeOperation = 'copy';

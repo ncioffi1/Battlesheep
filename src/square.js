@@ -141,7 +141,9 @@ class Square {
 
     draw() {
         let filepath = ""
-        if (this.type === "sheep"){
+        if (this.type === "gameBG") {
+            filepath = 'assets/game_bg.png'
+        } else if (this.type === "sheep"){
             if (this.color === "head") {
                 filepath = 'assets/sheep_head.png'
             } else if (this.color === "body") {

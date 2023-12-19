@@ -64,6 +64,7 @@ class Game {
         this.musicOn = true;
         this.musicActivated = false;
         this.gameActivated = false;
+        this.gameOver = false;
         this.soundOn = true;
 
         this.gameBG = new Square(ctx3, 400, 0, 800, 1200, "gameBG", "gameBG");
@@ -419,13 +420,18 @@ class Game {
     generateMenuButtons() {
         let start_rect = new UIObject(this.ctx3, 700, 495, 150, 150, "gameplay", "unpressed", "start");
         let random_rect = new UIObject(this.ctx3, 700, 420, 150, 150, "gameplay", "unpressed", "random");
+        // let replay_rect = new UIObject(this.ctx3, 700, 495, 150, 150, "gameplay", "unpressed", "replay");
+
         this.uiobjects.push(start_rect);
         this.uiobjects.push(random_rect);
+        // this.uiobjects.push(replay_rect);
 
-        let start_button = new Button(start_rect, 644, 760, 518, 477, "start", "N/A")
-        let randomize_button = new Button(random_rect, 644, 760, 443, 401, "randomize", "N/A")
+        let start_button = new Button(start_rect, 644, 760, 518, 477, "start", "N/A");
+        let randomize_button = new Button(random_rect, 644, 760, 443, 401, "randomize", "N/A");
+        // let replay_button = new Button(start_rect, 644, 760, 518, 477, "replay", "N/A");
         this.buttons.push(start_button);
         this.buttons.push(randomize_button);
+        // this.buttons.push(replay_button);
 
         let music_UI = new UIObject(this.ctx3, 680, 50, 200, 200, "music", "unpressed", "on")
         let sound_UI = new UIObject(this.ctx3, 740, 50, 200, 200, "sound", "unpressed", "on")

@@ -25,6 +25,11 @@ class Button {
         this.element.setColor("empty");
     }
 
+    press(){
+        console.log("called Press");
+        this.element.press();
+    }
+
     place(type, color) {
         this.element.setType(type);
         this.element.setColor(color);

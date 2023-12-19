@@ -5,6 +5,7 @@ var square = document.getElementById("square");
 const Square = require('./square.js');
 const Button = require('./button.js');
 const Sheep = require('./sheep.js');
+const UIObject = require('./uiobject.js')
 
 // const Asteroid = require('./asteroid.js')
 
@@ -25,6 +26,7 @@ class Game {
         this.hoverX = 0;
         this.hoverY = 0;
         this.clicked = false;
+        this.clicked2 = false;
         this.play = this.play.bind(this);
         this.draw = this.draw.bind(this);
         this.ships = [];
@@ -46,6 +48,7 @@ class Game {
        
         
         this.buttons = [];
+        this.uiobjects = [];
         this.enemyShips = [];
         this.enemyButtons = [];
         this.playerSheeps = [];
@@ -54,11 +57,16 @@ class Game {
         this.activeTextString = "";
         this.activeTextString2 = "";
         this.activeTextString3 = "";
-        this.sideButton2 = "randomize"
         this.sideButton1 = "start game"
+        this.sideButton2 = "randomize"
+        this.sideButton3 = "play again"
         this.boardSize = 7;   // 7 works.
+        this.musicOn = true;
+        this.musicActivated = false;
+        this.gameActivated = false;
+        this.soundOn = true;
 
-        this.gameBG = new Square(ctx1, 400, 0, 800, 1200, "gameBG", "gameBG");
+        this.gameBG = new Square(ctx3, 400, 0, 800, 1200, "gameBG", "gameBG");
 
         this.draw();
 
@@ -69,6 +77,7 @@ class Game {
 
         this.drawCall = 0;
         this.playCall = 0;
+
         console.log(this.bgmusic);
     }
 
@@ -82,6 +91,7 @@ class Game {
         this.clickX = x;
         this.clickY = y;
         this.clicked = true;
+        this.clicked2 = true;
         console.log("x: " + x + " y: " + y)
     }
 
@@ -155,16 +165,28 @@ class Game {
                     this.buttons.forEach(function(button) {
                         if (button.buttonCheck(that.clickX, that.clickY)) {
                             if (button.buttonType === "randomize") {
+                                button.press();
                                 that.clearSheep("player");
                                 that.spawnSheep("player");
-                                // createjs.Sound.stop();
-                                that.sheep1.pause;
-                                that.sheep1.currentTime = 0;
-                                // that.sheep1.play();
+                                
+                                if (that.soundOn){
+                                    that.sheep1.pause;
+                                    that.sheep1.currentTime = 0;
+                                    that.sheep1.play();
+                                }
                             } else if (button.buttonType === "start") {
-                                that.altState = 2;
-                                // that.bgmusic.play();
-                                // that.bgmusic.loop = true;
+                                button.press();
+                                that.altState = 99;
+                                setTimeout(() => {
+                                    that.altState = 2;
+                                    that.gameActivated = true;
+                                    that.musicActivated = true;
+                                    if (that.musicOn){
+                                        that.bgmusic.play();
+                                        that.bgmusic.loop = true;
+                                    }
+
+                                }, 300)
                             }
                         }
                     })
@@ -220,19 +242,23 @@ class Game {
                                     }
 
                                     if (goAgain) {
-                                        that.cannon1.pause;
-                                        that.cannon1.currentTime = 0;
-                                        // that.cannon1.play();
+                                        if (that.soundOn){
+                                            that.cannon1.pause;
+                                            that.cannon1.currentTime = 0;
+                                            that.cannon1.play();
 
-                                        setTimeout(() => { 
-                                            that.tongue1.pause;
-                                            that.tongue1.currentTime = 0;
-                                            // that.tongue1.play();
-                                        }, 500);
+                                            setTimeout(() => { 
+                                                that.tongue1.pause;
+                                                that.tongue1.currentTime = 0;
+                                                that.tongue1.play();
+                                            }, 500);
+                                        }
                                     } else {
-                                        that.cannon1.pause;
-                                        that.cannon1.currentTime = 0;
-                                        // that.cannon1.play();
+                                        if (that.soundOn){
+                                            that.cannon1.pause;
+                                            that.cannon1.currentTime = 0;
+                                            that.cannon1.play();
+                                        }
                                     }
                                 }
                             }
@@ -248,7 +274,7 @@ class Game {
                             that.altState = 5;
                         }
                     }
-                    console.log("goAgain is " + goAgain.toString());
+                    
 
                 }
 
@@ -303,19 +329,23 @@ class Game {
                                     }
 
                                     if (goAgain) {
-                                        that.cannon1.pause;
-                                        that.cannon1.currentTime = 0;
-                                        // that.cannon1.play();
+                                        if (that.soundOn){
+                                            that.cannon1.pause;
+                                            that.cannon1.currentTime = 0;
+                                            that.cannon1.play();
 
-                                        setTimeout(() => { 
-                                            that.tongue1.pause;
-                                            that.tongue1.currentTime = 0;
-                                            // that.tongue1.play();
-                                        }, 500);
+                                            setTimeout(() => { 
+                                                that.tongue1.pause;
+                                                that.tongue1.currentTime = 0;
+                                                that.tongue1.play();
+                                            }, 500);
+                                        }
                                     } else {
-                                        that.cannon1.pause;
-                                        that.cannon1.currentTime = 0;
-                                        // that.cannon1.play();
+                                        if (that.soundOn){
+                                            that.cannon1.pause;
+                                            that.cannon1.currentTime = 0;
+                                            that.cannon1.play();
+                                        }
                                     }
                                 }
                             }
@@ -343,20 +373,69 @@ class Game {
         }
         this.i += 1;
 
-        this.playCall += 1;
-        if (this.playCall % 60 === 0) {
-            console.log("PLAY CALL:  " + this.playCall.toString());
-        }
+        // this.playCall += 1;
+        // if (this.playCall % 60 === 0) {
+        //     console.log("PLAY CALL:  " + this.playCall.toString());
+        // }
         // run the callback loop.
+
+        // at any point, you can turn the sound / music on or off.
+        // this would break our existing click checks - so lets add a second
+        // one for the purpose of checking clicks outside the loop.
+        if (this.clicked2){
+            this.clicked2 = false;
+            let that = this;
+
+            this.buttons.forEach(function(button) {
+                if (button.buttonCheck(that.clickX, that.clickY)) {
+                    if (button.buttonType === "music") {
+                        button.press();
+                        if (that.musicOn){
+                            that.bgmusic.pause();
+
+                            that.musicOn = false;
+                        } else {
+                            if (that.musicActivated){
+                                that.bgmusic.play();
+                                that.bgmusic.loop = true;
+                            }
+                            that.musicOn = true;
+                        }
+                    } else if (button.buttonType === "sound") {
+                        button.press();
+                        if (that.soundOn){
+                            that.soundOn = false;
+                        } else {
+                            that.soundOn = true;
+                        }
+                    }
+                }
+            })
+        }
+
         requestAnimationFrame(this.play);
     }
 
     generateMenuButtons() {
-        let start_button = new Button("N/A", 651, 751, 518, 477, "start", "N/A")
-        let randomize_button = new Button("N/A", 651, 751, 443, 401, "randomize", "N/A")
+        let start_rect = new UIObject(this.ctx3, 700, 495, 150, 150, "gameplay", "unpressed", "start");
+        let random_rect = new UIObject(this.ctx3, 700, 420, 150, 150, "gameplay", "unpressed", "random");
+        this.uiobjects.push(start_rect);
+        this.uiobjects.push(random_rect);
 
+        let start_button = new Button(start_rect, 644, 760, 518, 477, "start", "N/A")
+        let randomize_button = new Button(random_rect, 644, 760, 443, 401, "randomize", "N/A")
         this.buttons.push(start_button);
         this.buttons.push(randomize_button);
+
+        let music_UI = new UIObject(this.ctx3, 680, 50, 200, 200, "music", "unpressed", "on")
+        let sound_UI = new UIObject(this.ctx3, 740, 50, 200, 200, "sound", "unpressed", "on")
+        this.uiobjects.push(music_UI);
+        this.uiobjects.push(sound_UI);
+
+        let music_button = new Button(music_UI, 655, 705, 81, 25, "music", "N/A")
+        let sound_button = new Button(sound_UI, 716, 766, 81, 25, "sound", "N/A")
+        this.buttons.push(music_button);
+        this.buttons.push(sound_button);
     }
 
     // enemy is firing.
@@ -490,8 +569,7 @@ class Game {
                     }
                 }
             })
-        }
-        
+        } 
     }
 
     queueMoveShips(){
@@ -898,9 +976,10 @@ class Game {
 
     draw() {
         this.ctx1.clearRect(0, 0, 800, 600);
-        this.gameBG.draw();
 
         this.ctx3.clearRect(0, 0, 800, 600);
+
+        this.gameBG.draw();
         // this.ctx3.save();
         // this.ctx3.globalCompositeOperation = 'copy';
         // this.ctx3.strokeStyle = 'transparent';
@@ -909,37 +988,51 @@ class Game {
         // this.ctx3.stroke();
         // this.ctx3.restore();
 
+        
         // draw text.  if errors put on own context.
-        this.ctx3.font = ("30px Arial");
+        this.ctx3.font = ("30px Afacad");
         this.ctx3.fillStyle = "black";
         this.ctx3.textAlign = "center";
         this.ctx3.fillText(this.activeTextString, 400, 50);
 
-        this.ctx3.font = ("16px Arial");
+        this.ctx3.font = ("16px Afacad");
         this.ctx3.fillStyle = "black";
         this.ctx3.textAlign = "center";
         this.ctx3.fillText(this.activeTextString2, 400, 80);
 
-        this.ctx3.font = ("16px Arial");
+        this.ctx3.font = ("16px Afacad");
         this.ctx3.fillStyle = "black";
         this.ctx3.textAlign = "center";
         this.ctx3.fillText(this.activeTextString3, 400, 100);
 
-        this.ctx3.fillStyle = 'gray';
-        this.ctx3.fillRect(650, 475, 100, 40);
-
-        this.ctx3.fillStyle = 'gray';
-        this.ctx3.fillRect(650, 400, 100, 40);
-
-        this.ctx3.font = ("16px Arial");
+        let that = this;
+        this.ctx3.font = ("16px Afacad");
         this.ctx3.fillStyle = "black";
         this.ctx3.textAlign = "center";
-        this.ctx3.fillText(this.sideButton1, 700, 500);
 
-        this.ctx3.font = ("16px Arial");
-        this.ctx3.fillStyle = "black";
-        this.ctx3.textAlign = "center";
-        this.ctx3.fillText(this.sideButton2, 700, 425);
+        this.uiobjects.forEach(function(uiobject) {
+            if (uiobject.type === "gameplay") {
+                if (!that.gameActivated){
+                    uiobject.draw();
+
+                    if (uiobject.status === "start"){
+                        if (uiobject.color === "unpressed"){
+                            that.ctx3.fillText(that.sideButton1, 700, 500);
+                        } else if (uiobject.color === "pressed"){
+                            that.ctx3.fillText(that.sideButton1, 700, 502);
+                        }
+                    } else if (uiobject.status === "random"){
+                        if (uiobject.color === "unpressed"){
+                            that.ctx3.fillText(that.sideButton2, 700, 425);
+                        } else if (uiobject.color === "pressed"){
+                            that.ctx3.fillText(that.sideButton2, 700, 427);
+                        }
+                    }
+                }
+            } else {
+                uiobject.draw();
+            }
+        });
 
         this.ships.forEach(function(ship) {
             ship.draw();
@@ -963,14 +1056,18 @@ class Game {
         }
 
 
-        this.drawCall += 1;
-        if (this.drawCall % 60 === 0) {
-            console.log("DRAW CALL:  " + this.drawCall.toString());
-        }
+        // this.drawCall += 1;
+        // if (this.drawCall % 60 === 0) {
+        //     console.log("DRAW CALL:  " + this.drawCall.toString());
+        // }
         
 
         requestAnimationFrame(this.draw);
     }
+
+
+
+
 }
 
 module.exports = Game;

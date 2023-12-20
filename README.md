@@ -44,10 +44,11 @@ instantaneous to an end user.  The math for a reroll & probability of failure
 looks something like this:
 
 %chance_success = (possible_solutions / possible_permutations) * 100
+
 %chance_failure = (possible_failures / possible_permutations) * 100
 
-long story short, for each successive roll, there's always the same % chance that
-the program will land on a possible solution.  in a game with over a billion options, with most of them being possible solutions, this works out OK. 
+Long story short, for each successive roll, there's always the same % chance that
+the program will land on a possible solution.  In a game with over a billion options, with most of them being possible solutions, this works out OK. 
 
 The following code block iterates through already placed sheep positions
 and marks them as invalid.  It then iterates through the entire board -

@@ -230,6 +230,12 @@ class Game {
                                 button.press();
                                 that.altState = 99;
 
+                                if (that.soundOn){
+                                    that.sheep1.pause;
+                                    that.sheep1.currentTime = 0;
+                                    that.sheep1.play();
+                                }
+
                                 setTimeout(() => {
                                     that.boardSize = 7;
                                     that.sheepLeftToPlace = [6, 1, 2, 5, 1, 2, 1];
@@ -239,6 +245,12 @@ class Game {
                             } else if (button.buttonType === "size9x9") {
                                 button.press();
                                 that.altState = 99;
+
+                                if (that.soundOn){
+                                    that.sheep1.pause;
+                                    that.sheep1.currentTime = 0;
+                                    that.sheep1.play();
+                                }
 
                                 setTimeout(() => {
                                     that.boardSize = 9;
@@ -550,8 +562,22 @@ class Game {
         this.buttons.push(randomize_button);
         this.buttons.push(replay_button);
 
-        let music_UI = new UIObject(this.ctx3, 680, 50, 200, 200, "music", "unpressed", "on")
-        let sound_UI = new UIObject(this.ctx3, 740, 50, 200, 200, "sound", "unpressed", "on")
+        let musicStatus = ""
+        if (this.musicOn) {
+            musicStatus = "on"
+        } else {
+            musicStatus = "off"
+        }
+
+        let soundStatus = ""
+        if (this.soundOn) {
+            soundStatus = "on"
+        } else {
+            soundStatus = "off"
+        }
+
+        let music_UI = new UIObject(this.ctx3, 680, 50, 200, 200, "music", "unpressed", musicStatus)
+        let sound_UI = new UIObject(this.ctx3, 740, 50, 200, 200, "sound", "unpressed", soundStatus)
         this.uiobjects.push(music_UI);
         this.uiobjects.push(sound_UI);
 

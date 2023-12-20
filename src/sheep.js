@@ -24,6 +24,7 @@ class Sheep {
     // [[0, 0], [1, 0], [2, 0], [3, 0]] |  [[0, 0], [0, 1], [0, 2], [0, 3]]
     // [[0, 0], [1, 0], [1, 1]]         |  [[1, 0], [1, 1], [0, 1]]         |  [[1, 1], [0, 1], [0, 0]          |  [0, 1], [0, 0], [1, 0]]
     // [[0, 0], [1, 0], [2, 0], [1, 1]] |  [[0, 0], [0, 1], [0, 2], [1, 1]] |  [[1, 0] [0, 1] [1, 1] [2, 1]]    |  [[1, 0] [0, 1] [1, 1] [1, 2]]
+    
     hoverSheep(pos){
         let hoverPositions = [];
         let that = this;
@@ -108,20 +109,12 @@ class Sheep {
     }
 
     checkIfFoundPart(pos){
-        // is this pos part of sheep?
         let foundPart = false;
         if (JSON.stringify(this.sheepPartPositions).includes(pos)){
-            // console.log("FOUND SHEEP PART")
             foundPart = true;
-            // did you find this part already?
-            if (!JSON.stringify(this.sheepPartsFound).includes(pos)){
-                // add part to sheepPartsFound
-                // console.log("ADDED PART TO SHEEP PARTS FOUND")
-                // console.log("sheepPartsFound:  " + this.sheepPartsFound.toString())
-                // console.log("sheepPartsFound.length:  " + this.sheepPartsFound.length.toString());
-                // console.log("sheep size:  " + this.size.toString());
 
-                this.sheepPartsFound.push(pos);
+            if (!JSON.stringify(this.sheepPartsFound).includes(pos)){
+                this.sheepPartsFound.push(pos);  
             }
         }
         return foundPart;

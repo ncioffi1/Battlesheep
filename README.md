@@ -3,7 +3,7 @@
 [Battlesheep](https://ncioffi1.github.io/Battlesheep/) is a spin on the game Battleship.  Two enemy farmers take turns trying to fire a cannon at each others' sheep.  In this game, both players have a selection of sheep depending on the size
 of the board.  Sheeps can have different shapes - some sheeps are straight lines, while others bend and twist into different block shaped pieces.  Once the player has set their sheep, the game loop begins, and players take turns firing at the enemy's squares until one player no longer has any sheep left.  The player with sheep remaining at the end of the game is the winner.
 
-![Battlesheep Interface](./assets/battlesheep_screenshot.png)
+![Battlesheep Interface](./dist/assets/battlesheep_screenshot.png)
 # Wireframe:
 
 ![Battlesheep Wireframe](./Wireframe.png)

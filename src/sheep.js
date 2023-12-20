@@ -111,12 +111,12 @@ class Sheep {
         // is this pos part of sheep?
         let foundPart = false;
         if (JSON.stringify(this.sheepPartPositions).includes(pos)){
-            console.log("FOUND SHEEP PART")
+            // console.log("FOUND SHEEP PART")
             foundPart = true;
             // did you find this part already?
             if (!JSON.stringify(this.sheepPartsFound).includes(pos)){
                 // add part to sheepPartsFound
-                console.log("ADDED PART TO SHEEP PARTS FOUND")
+                // console.log("ADDED PART TO SHEEP PARTS FOUND")
                 // console.log("sheepPartsFound:  " + this.sheepPartsFound.toString())
                 // console.log("sheepPartsFound.length:  " + this.sheepPartsFound.length.toString());
                 // console.log("sheep size:  " + this.size.toString());

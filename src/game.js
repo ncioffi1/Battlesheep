@@ -1,4 +1,4 @@
-// console.log("im the game")
+
 
 var square = document.getElementById("square");
 
@@ -11,7 +11,7 @@ const UIObject = require('./uiobject.js')
 
 class Game {
     constructor(layer3, ctx1, ctx2, ctx3, DIM_X, DIM_Y) {
-        this.i = 1;
+        // this.i = 1;
         // this.ctx = ctx;
         this.layer3 = layer3;
         this.ctx1 = ctx1;
@@ -37,8 +37,10 @@ class Game {
         // for testing
         // this.sheepLeftToPlace = [1];
         // this.computerLeftToPlace = [1];
-        this.sheepLeftToPlace = [6, 1, 2, 5, 1, 2];
-        this.computerLeftToPlace = [6, 1, 2, 5, 1, 2];
+        this.sheepLeftToPlace = [6, 1, 2, 5, 1, 2, 1];
+        this.computerLeftToPlace = [6, 1, 2, 5, 1, 2, 1];
+        this.sheepRotations = [];
+        // this.generateRotations();
 
         this.sheepPositions = [];
         this.playerFoundPositions = [];
@@ -93,11 +95,17 @@ class Game {
 
         // this.redirect();
 
-        // console.log(this.bgmusic);
+        
     }
 
-    // note this project uses febucci lerp functions found here:
-    // https://www.febucci.com/2018/08/easing-functions/
+    // generate array the length of sheepsLeftToPlace w rot values (4 possible)
+    generateRotations() {
+        this.sheepRotations = [];
+        for (let i = 0; i < this.sheepLeftToPlace.length; i++) {
+            let rot = Math.floor(Math.random() * 4);  // 0, 1, 2, 3;
+            this.sheepRotations.push(rot);
+        }
+    }
 
     getCursorPosition(canvas, event) {
         const rect = canvas.getBoundingClientRect()
@@ -205,6 +213,7 @@ class Game {
                         if (button.buttonCheck(that.clickX, that.clickY)) {
                             if (button.buttonType === "randomize") {
                                 button.press();
+                                // that.generateRotations();
                                 that.clearSheep("player");
                                 that.spawnSheep("player");
                                 
@@ -228,6 +237,30 @@ class Game {
                                         that.bgmusic.loop = true;
                                     }
 
+                                }, 300)
+                            } else if (button.buttonType === "size7x7") {
+                                button.press();
+                                that.altState = 99;
+
+                                setTimeout(() => {
+                                    that.boardSize = 7;
+                                    that.sheepLeftToPlace = [6, 1, 2, 5, 1, 2, 1];
+                                    that.computerLeftToPlace = [6, 1, 2, 5, 1, 2, 1];
+                                    // that.generateRotations();
+
+                                    that.resetGame();
+                                }, 300)
+                            } else if (button.buttonType === "size9x9") {
+                                button.press();
+                                that.altState = 99;
+
+                                setTimeout(() => {
+                                    that.boardSize = 9;
+                                    that.sheepLeftToPlace = [7, 6, 1, 2, 5, 4, 3, 2, 1, 1];
+                                    that.computerLeftToPlace = [7, 6, 1, 2, 5, 4, 3, 2, 1, 1];
+                                    // that.generateRotations();
+
+                                    that.resetGame();
                                 }, 300)
                             }
                         }
@@ -367,7 +400,7 @@ class Game {
                     that.altState = 0;
                     that.activeTextString = "Computer Wins!";
                 } else {
-                    let random = Math.floor(Math.random() * options.length);  // pick a random one.
+                    let random = Math.floor(Math.random() * options.length);  // pick a random int from 0 to options.length (exclusive for options.length).
                     let random_pos = options[random];
 
                     // player:  ENEMY
@@ -447,12 +480,8 @@ class Game {
                 }
             }
         }
-        this.i += 1;
+        // this.i += 1;
 
-        // this.playCall += 1;
-        // if (this.playCall % 60 === 0) {
-        //     console.log("PLAY CALL:  " + this.playCall.toString());
-        // }
         // run the callback loop.
 
         // at any point, you can turn the sound / music on or off.
@@ -508,6 +537,8 @@ class Game {
         this.playerFoundPositions = [];
         this.playerFiredPositions = [];
         this.enemyFiredPositions = [];
+        this.sheepRotations = [];
+        // this.generateRotations();
 
         this.clearSheep("player");
         this.clearSheep("enemy");
@@ -523,6 +554,17 @@ class Game {
     }
 
     generateMenuButtons() {
+        // experimental:  different board sizes
+        let seven_rect = new UIObject(this.ctx3, 700, 270, 150, 150, "gameplay", "unpressed", "7x7");
+        let nine_rect = new UIObject(this.ctx3, 700, 345, 150, 150, "gameplay", "unpressed", "9x9");
+        this.uiobjects.push(seven_rect);
+        this.uiobjects.push(nine_rect);
+        let seven_button = new Button(seven_rect, 644, 760, 294, 252, "size7x7", "N/A");
+        let nine_button = new Button(nine_rect, 644, 760, 371, 328, "size9x9", "N/A");
+        this.buttons.push(seven_button);
+        this.buttons.push(nine_button);
+
+        // core:  pregame menu items
         let start_rect = new UIObject(this.ctx3, 700, 495, 150, 150, "gameplay", "unpressed", "start");
         let random_rect = new UIObject(this.ctx3, 700, 420, 150, 150, "gameplay", "unpressed", "random");
         let replay_rect = new UIObject(this.ctx3, 700, 495, 150, 150, "gameplay", "unpressed", "replay");
@@ -852,108 +894,128 @@ class Game {
 
     generateSquares(ctx) {
         let size = this.boardSize;
-        for (let i = 0; i < size; i++) {
-            for (let j = 0; j < size; j++){
-                let xPos = 400 - ((Math.floor(size / 2)) * 50) + (i * 50);
-                let yPos = 200 + (j * 50);
-                let ship = new Square(ctx, xPos, yPos, 50, 50, "blank", "empty");
-                this.ships.push(ship);
-                let x_left = xPos - 20;
-                let x_right = xPos + 20;
-                let y_top = yPos + 20;
-                let y_bot = yPos - 20;
-                let button = new Button(ship, x_left, x_right, y_top, y_bot, "ship", [i, j]);
-                this.buttons.push(button);
+
+        if (size === 7) {
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++){
+                    let xPos = 400 - ((Math.floor(size / 2)) * 50) + (i * 50);
+                    let yPos = 200 + (j * 50);
+                    let ship = new Square(ctx, xPos, yPos, 50, 50, "blank", "empty");
+                    this.ships.push(ship);
+                    let x_left = xPos - 20;
+                    let x_right = xPos + 20;
+                    let y_top = yPos + 20;
+                    let y_bot = yPos - 20;
+                    let button = new Button(ship, x_left, x_right, y_top, y_bot, "ship", [i, j]);
+                    this.buttons.push(button);
+                }
+            }
+        } else if (size === 9) {
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++){
+                    let xPos = 400 - ((Math.floor(size / 2)) * 40) + (i * 40);
+                    let yPos = 200 + (j * 40) - 5
+                    
+                    let ship = new Square(ctx, xPos, yPos, 42, 42, "blank", "empty");
+                    this.ships.push(ship);
+                    let x_left = xPos - 17;
+                    let x_right = xPos + 17;
+                    let y_top = yPos + 17;
+                    let y_bot = yPos - 17;
+                    let button = new Button(ship, x_left, x_right, y_top, y_bot, "ship", [i, j]);
+                    this.buttons.push(button);
+                }
             }
         }
     }
 
     generateEnemySquares(ctx) {
         let size = this.boardSize;
-        for (let i = 0; i < size; i++) {
-            for (let j = 0; j < size; j++){
-                let xPos = 400 - ((Math.floor(size / 2)) * 50) + (i * 50);
-                let yPos = 200 - 600 + (j * 50);
-                let ship = new Square(ctx, xPos, yPos, 50, 50, "blank", "empty");
-                this.enemyShips.push(ship);
-                let x_left = xPos - 20;
-                let x_right = xPos + 20;
-                let y_top = yPos + 20 + 600;
-                let y_bot = yPos - 20 + 600;
-                let button = new Button(ship, x_left, x_right, y_top, y_bot, "ship", [i, j]);
-                this.enemyButtons.push(button);
+        if (size === 7) {
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++){
+                    let xPos = 400 - ((Math.floor(size / 2)) * 50) + (i * 50);
+                    let yPos = 200 - 600 + (j * 50);
+                    let ship = new Square(ctx, xPos, yPos, 50, 50, "blank", "empty");
+                    this.enemyShips.push(ship);
+                    let x_left = xPos - 20;
+                    let x_right = xPos + 20;
+                    let y_top = yPos + 20 + 600;
+                    let y_bot = yPos - 20 + 600;
+                    let button = new Button(ship, x_left, x_right, y_top, y_bot, "ship", [i, j]);
+                    this.enemyButtons.push(button);
+                }
+            }
+        } else if (size === 9) {
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++){
+                    let xPos = 400 - ((Math.floor(size / 2)) * 40) + (i * 40);
+                    let yPos = 200 - 600 + (j * 40) - 5;
+                    let ship = new Square(ctx, xPos, yPos, 42, 42, "blank", "empty");
+                    this.enemyShips.push(ship);
+                    let x_left = xPos - 17;
+                    let x_right = xPos + 17;
+                    let y_top = yPos + 17 + 600;
+                    let y_bot = yPos - 17 + 600;
+                    let button = new Button(ship, x_left, x_right, y_top, y_bot, "ship", [i, j]);
+                    this.enemyButtons.push(button);
+                }
             }
         }
+        
     }
 
-    generateTempSheep(id) {
-        let xMod = 250;
-        let yMod = -25;
-        if (id === 1){
-            let xPos = 400 + xMod;
-            let yPos = 125 + yMod;
-
-            this.tempSheep = new Square(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
-            
-        } else if (id === 2) {
-            let xPos = 375 + xMod;
-            let yPos = 125 + yMod;
-
-            this.tempSheep = new Square(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
-            this.tempSheep2 = new Square(this.ctx3, xPos + 50, yPos, 50, 50, "body", "sheep");
-            
-        } else if (id === 3) {
-            let xPos = 350 + xMod;
-            let yPos = 125 + yMod;
-
-            this.tempSheep = new Square(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
-            this.tempSheep2 = new Square(this.ctx3, xPos + 50, yPos, 50, 50, "body", "sheep");
-            this.tempSheep3 = new Square(this.ctx3, xPos + 100, yPos, 50, 50, "body", "sheep");
-           
-        } else if (id === 4) {
-            let xPos = 325 + xMod;
-            let yPos = 125 + yMod;
-
-            this.tempSheep = new Square(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
-            this.tempSheep2 = new Square(this.ctx3, xPos + 50, yPos, 50, 50, "body", "sheep");
-            this.tempSheep3 = new Square(this.ctx3, xPos + 100, yPos, 50, 50, "body", "sheep");
-            this.tempSheep4 = new Square(this.ctx3, xPos + 150, yPos, 50, 50, "body", "sheep");
-            
-        } else if (id === 5) {
-            let xPos = 375 + xMod;
-            let yPos = 100 + yMod;
-
-            this.tempSheep = new Square(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
-            this.tempSheep2 = new Square(this.ctx3, xPos + 50, yPos, 50, 50, "body", "sheep");
-            this.tempSheep3 = new Square(this.ctx3, xPos + 50, yPos + 50, 50, 50, "body", "sheep");
-            
-        } else if (id === 6) {
-            let xPos = 350 + xMod;
-            let yPos = 100 + yMod;
-
-            this.tempSheep = new Square(this.ctx3, xPos, yPos, 50, 50, "head", "sheep");
-            this.tempSheep2 = new Square(this.ctx3, xPos + 50, yPos, 50, 50, "body", "sheep");
-            this.tempSheep3 = new Square(this.ctx3, xPos + 100, yPos, 50, 50, "body", "sheep");
-            this.tempSheep4 = new Square(this.ctx3, xPos + 50, yPos + 50, 50, 50, "body", "sheep");
-
-            
+    generateActiveSheep(id, rotation) {
+        if (rotation === undefined) {
+            rotation = 0;
         }
-        this.activeSheep = this.generateActiveSheep(id);
-    }
 
-    generateActiveSheep(id) {
         if (id === 1){
             return new Sheep(this, [[0, 0]]);
         } else if (id === 2) {
-            return new Sheep(this, [[0, 0], [1, 0]]);
+            if (rotation === 0 || rotation === 1) {
+                return new Sheep(this, [[0, 0], [1, 0]]);
+            } else {
+                return new Sheep(this, [[0, 0], [0, 1]]);
+            }
         } else if (id === 3) {
-            return new Sheep(this, [[0, 0], [1, 0], [2, 0]]);
+            if (rotation === 0 || rotation === 1) {
+                return new Sheep(this, [[0, 0], [1, 0], [2, 0]]);
+            } else {
+                return new Sheep(this, [[0, 0], [0, 1], [0, 2]]);
+            }
         } else if (id === 4) {
-            return new Sheep(this, [[0, 0], [1, 0], [2, 0], [3, 0]]);
+            if (rotation === 0 || rotation === 1) {
+                return new Sheep(this, [[0, 0], [1, 0], [2, 0], [3, 0]]);
+            } else {
+                return new Sheep(this, [[0, 0], [0, 1], [0, 2], [0, 3]]);
+            }
         } else if (id === 5) {
-            return new Sheep(this, [[0, 0], [1, 0], [1, 1]]);
+            if (rotation === 0) {
+                return new Sheep(this, [[0, 0], [1, 0], [1, 1]]);
+            } else if (rotation === 1) {
+                return new Sheep(this, [[1, 0], [1, 1], [0, 1]]);
+            } else if (rotation === 2) {
+                return new Sheep(this, [[1, 1], [0, 1], [0, 0]]);
+            } else if (rotation === 3) {
+                return new Sheep(this, [[0, 1], [0, 0], [1, 0]]);
+            }
         } else if (id === 6) {
-            return new Sheep(this, [[0, 0], [1, 0], [2, 0], [1, 1]] );
+            if (rotation === 0) {
+                return new Sheep(this, [[0, 0], [1, 0], [2, 0], [1, 1]] );
+            } else if (rotation === 1) {
+                return new Sheep(this, [[0, 0], [0, 1], [0, 2], [1, 1]] );
+            } else if (rotation === 2) {
+                return new Sheep(this, [[0, 1], [1, 1], [2, 1], [1, 0]] );
+            } else if (rotation === 3) {
+                return new Sheep(this, [[1, 0], [1, 1], [1, 2], [0, 1]] );
+            }
+        } else if (id === 7) {
+            if (rotation === 0 || rotation === 1) {
+                return new Sheep(this, [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0]]);
+            } else {
+                return new Sheep(this, [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4]]);
+            }
         }
     }
 
@@ -979,6 +1041,9 @@ class Game {
 
     spawnSheep(playerType){
         let that = this;
+
+        this.generateRotations();
+
         let l = 0;
         let myLeftToPlace = [];
         if (playerType === "player"){
@@ -996,7 +1061,7 @@ class Game {
             placingComplete = true;
 
             if (q < l) {
-                this.activeSheep = this.generateActiveSheep(myLeftToPlace[q]);
+                this.activeSheep = this.generateActiveSheep(myLeftToPlace[q], this.sheepRotations[q]);
                 
                 let positions = this.generatePossiblePositionArray(playerType);
                 if (positions.length === 0) {  // if theres no possible positions,
@@ -1198,7 +1263,19 @@ class Game {
                     if (!that.gameActivated){
                         uiobject.draw();
     
-                        if (uiobject.status === "start"){
+                        if (uiobject.status === "7x7"){
+                            if (uiobject.color === "unpressed"){
+                                that.ctx3.fillText("7x7 Game", 700, 275);
+                            } else if (uiobject.color === "pressed"){
+                                that.ctx3.fillText("7x7 Game", 700, 277);
+                            }
+                        } else if (uiobject.status === "9x9") {
+                            if (uiobject.color === "unpressed"){
+                                that.ctx3.fillText("9x9 Game", 700, 350);
+                            } else if (uiobject.color === "pressed"){
+                                that.ctx3.fillText("9x9 Game", 700, 352);
+                            }
+                        } else if (uiobject.status === "start"){
                             if (uiobject.color === "unpressed"){
                                 that.ctx3.fillText(that.sideButton1, 700, 500);
                             } else if (uiobject.color === "pressed"){

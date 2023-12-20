@@ -26,7 +26,7 @@ class Button {
     }
 
     press(){
-        console.log("called Press");
+        // console.log("called Press");
         this.element.press();
     }
 

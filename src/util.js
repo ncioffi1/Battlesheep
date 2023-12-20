@@ -1,7 +1,6 @@
 
-// useful for getting each possible solution for a given set of 
-// sheep.  however, at >3 sheep, the permutations become too large,
-// so as suspected, it hangs the program...
+// unused code - for getting each possible permutation 
+// of sheep placements.  
 
 function getAllPossibleSolutions(){
     let l = this.computerLeftToPlace.length;

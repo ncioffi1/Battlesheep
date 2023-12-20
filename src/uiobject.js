@@ -15,7 +15,7 @@ class UIObject {
     }
 
     press() {
-        console.log("PRESSED");
+        // console.log("PRESSED");
         this.color = "pressed";
         setTimeout(() => { 
             this.color = "unpressed";

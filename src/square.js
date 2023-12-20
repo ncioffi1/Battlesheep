@@ -143,6 +143,12 @@ class Square {
         let filepath = ""
         if (this.type === "gameBG") {
             filepath = 'assets/game_bg.png'
+        } else if (this.type === "github"){
+            filepath = 'assets/github_button.png'
+        } else if (this.type === "gameLogo") {
+            filepath = 'assets/battlesheep_logo_v3.png'
+        } else if (this.type === "gameSheep") {
+            filepath = 'assets/sheep_head.png'
         } else if (this.type === "sheep"){
             if (this.color === "head") {
                 filepath = 'assets/sheep_head.png'

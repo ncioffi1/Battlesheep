@@ -1,4 +1,4 @@
-console.log("im the game")
+// console.log("im the game")
 
 var square = document.getElementById("square");
 
@@ -17,7 +17,7 @@ class Game {
         this.ctx1 = ctx1;
         this.ctx2 = ctx2;
         this.ctx3 = ctx3;
-        this.state = 0;
+        this.state = -1;
         this.altState = 0;
         this.DIM_X = DIM_X;
         this.DIM_Y = DIM_Y;
@@ -34,6 +34,9 @@ class Game {
         this.tempSheep2;
         this.tempSheep3;
         this.tempSheep4;
+        // for testing
+        // this.sheepLeftToPlace = [1];
+        // this.computerLeftToPlace = [1];
         this.sheepLeftToPlace = [6, 1, 2, 5, 1, 2];
         this.computerLeftToPlace = [6, 1, 2, 5, 1, 2];
 
@@ -57,9 +60,9 @@ class Game {
         this.activeTextString = "";
         this.activeTextString2 = "";
         this.activeTextString3 = "";
-        this.sideButton1 = "start game"
-        this.sideButton2 = "randomize"
-        this.sideButton3 = "play again"
+        this.sideButton1 = "Start Game"
+        this.sideButton2 = "Randomize"
+        this.sideButton3 = "Play Again"
         this.boardSize = 7;   // 7 works.
         this.musicOn = true;
         this.musicActivated = false;
@@ -68,7 +71,16 @@ class Game {
         this.soundOn = true;
 
         this.gameBG = new Square(ctx3, 400, 0, 800, 1200, "gameBG", "gameBG");
-
+        this.githubLogo = new Square(ctx3, 400, 520, 50, 50, "github", "github");
+        this.githubButton = new Button(this.githubLogo, 378, 425, 545, 497, "github", "N/A");
+        this.creditsButton = new Button("N/A", 617, 747, 546, 417, "credits", "N/A");
+        this.backButton = new Button("N/A", 617, 747, 546, 417, "back", "N/A");
+        this.creditsSheep = new Square(ctx3, 400, 290, 800, 600, "gameSheep", "gameSheep");
+        this.gameLogo = new Square(ctx3, 400, 180, 800 / 1.25, 200 / 1.25, "gameLogo", "gameLogo");
+        this.gameSheep = new Square(ctx3, 120, 480, 150, 150, "gameSheep", "gameSheep");
+        this.gameSheep2 = new Square(ctx3, 800 - 120, 480, 150, 150, "gameSheep", "gameSheep");
+        this.gamePlay = new UIObject(this.ctx3, 400, 320, 400, 400, "gameplay", "unpressed", "play");
+        this.gamePlayButton = new Button(this.gamePlay, 245, 555, 382, 270, "play", "N/A");
         this.draw();
 
         this.bgmusic = new Audio("./assets/sounds/bamacountry.mp3");
@@ -79,7 +91,9 @@ class Game {
         this.drawCall = 0;
         this.playCall = 0;
 
-        console.log(this.bgmusic);
+        // this.redirect();
+
+        // console.log(this.bgmusic);
     }
 
     // note this project uses febucci lerp functions found here:
@@ -118,35 +132,59 @@ class Game {
     }
     // creating a custom game update loop.
     play() {
-        if (this.state === 0){
-            if (this.altState === 0) {
+        if (this.state === -1){
+            if (this.altState === 0){
                 this.altState = 1;
 
-                // add listener for clicks.
                 let that = this;
                 this.layer3.addEventListener('mousedown', function(e) {
-                    console.log("CLICK")
+                    // console.log("CLICK")
                     that.getCursorPosition(layer3, e)
                 })
 
                 this.layer3.addEventListener('mousemove', function(e) {
                     that.getHoverPosition(layer3, e)
                 })
+            } else if (this.altState === 1) {
+                if (this.clicked){
+                    this.clicked = false;
+                    let that = this;
 
-                // generate game assets
-                console.log("boop beep");
-                // this.playCall += 1;
-                // console.log("PLAY CALL:  " + playCall.toString());
+                    if (this.gamePlayButton.buttonCheck(that.clickX, that.clickY)) {
+                        if (this.gamePlayButton.buttonType === "play"){
+                            this.gamePlayButton.press();
+                            that.altState = 99;
 
-                // this.ctx1.fillStyle = 'green';
-                // this.ctx1.fillRect(0, 0, 800, 600);
+                            setTimeout(() => {
+                                this.state = 0;
+                                this.altState = 0;
+                            }, 300)
+                        }
+                    } else if (this.creditsButton.buttonCheck(that.clickX, that.clickY)) {
+                        this.state = -2;
+                        this.altState = 0;
+                    } else if (this.githubButton.buttonCheck(that.clickX, that.clickY)) {
+                        this.redirectToGithub();
+                    }
+                }
+            }
+        } else if (this.state === -2) {
+            if (this.clicked){
+                this.clicked = false;
+                let that = this;
 
-                // new Square(ctx, xPos, yPos, 50, 50, "blank", "empty");
+                if (this.backButton.buttonCheck(that.clickX, that.clickY)) {
+                    that.state = -1;
+                    that.altState = 1;
+                }
+            }
+        } else if (this.state === 0){
+            if (this.altState === 0) {
+                this.altState = 1;
                 
-                
-                this.activeTextString = "Place Your Sheeps"
-                this.activeTextString2 = "";
-                this.activeTextString3 = "";
+                this.activeTextString = "Move Your Sheeps"
+                this.activeTextString2 = "Click 'Randomize' To Move Them";
+                this.activeTextString3 = "When You're Ready, Click 'Start Game'";
                 
                 // generate game board
                 this.generateSquares(this.ctx3);
@@ -155,7 +193,7 @@ class Game {
 
                 this.spawnSheep("enemy");
                 this.spawnSheep("player");
-                console.log("spawned sheeps");
+                // console.log("spawned sheeps");
                 
             } else if (this.altState === 1) {
                 // tracking clicks.
@@ -176,6 +214,9 @@ class Game {
                                     that.sheep1.play();
                                 }
                             } else if (button.buttonType === "start") {
+                                that.activeTextString = "";
+                                that.activeTextString2 = "";
+                                that.activeTextString3 = "";
                                 button.press();
                                 that.altState = 99;
                                 setTimeout(() => {
@@ -206,20 +247,23 @@ class Game {
                 })
             } else if (this.altState === 2) {
                 setTimeout(() => { this.altState = 3 }, 1000);
-                // this.altState = 3;
-                this.activeTextString = "";
-                this.activeTextString2 = "";
-                this.activeTextString3 = ""
+
                 this.queueMoveShips();
             } else if (this.altState === 3) {
+                this.activeTextString = "";
+                this.activeTextString2 = "";
+                this.activeTextString3 = "";
+
                 if (this.moveShips("down")){
                     this.altState = 4;
                     this.clicked = false;
                 }
             } else if (this.altState === 4){
-                this.activeTextString = "Fire Your Cannon";
-                this.activeTextString2 = "";
-                this.activeTextString3 = "";
+                if (this.activeTextString === ""){
+                    this.activeTextString = "Fire Your Cannon";
+                    this.activeTextString2 = "";
+                    this.activeTextString3 = "";
+                }
                 
                 // fire.
                 if (this.clicked){
@@ -270,9 +314,15 @@ class Game {
                         that.state = 1;
                         that.altState = 0;
                         that.activeTextString = "You Win!";
+                        that.activeTextString2 = "";
                     } else if (!goAgain) { // if you got a hit, go again.  otherwise switch turns.
                         if (firedOnASquare) {
                             that.altState = 5;
+                            that.activeTextString = "You Missed!";
+                        }
+                    } else {
+                        if (firedOnASquare) {
+                            that.activeTextString = "You Hit!  You Go Again.";
                         }
                     }
                     
@@ -292,10 +342,13 @@ class Game {
                 })
             } else if (this.altState === 5) {
                 setTimeout(() => { this.altState = 6 }, 1000);
-                // this.altState = 6;
-                this.activeTextString = "";
+
                 this.queueMoveShips();
             } else if (this.altState === 6) {
+                this.activeTextString = "";
+                this.activeTextString2 = "";
+                this.activeTextString3 = "";
+
                 if (this.moveShips("up")){
                     this.altState = 7;
                 }
@@ -357,19 +410,41 @@ class Game {
                         that.state = 1;
                         that.altState = 0;
                         that.activeTextString = "Computer Wins!";
+                        that.activeTextString2 = "";
                     } else if (!goAgain) { // if you got a hit, go again.  otherwise switch turns.
-                        setTimeout(() => { this.altState = 2 }, 1000);
+                        that.activeTextString = "Computer Missed!";
+                        setTimeout(() => { this.altState = 2 }, 200);
                         // that.altState = 2;
                     } else {
+                        that.activeTextString = "Computer Hit!  Computer Goes Again.";
                         setTimeout(() => { this.altState = 7 }, 1000);
                     }
-                    console.log("goAgain is " + goAgain.toString());
+                    
                 }
             }
         } else if (this.state === 1){
             if (this.altState === 0){
-                this.altState = 1;
                 // game over.
+                this.gameOver = true;
+                if (this.clicked){
+                    this.clicked = false;
+
+                    let that = this;
+
+                    this.buttons.forEach(function(button) {
+                        if (button.buttonCheck(that.clickX, that.clickY)) {
+                            if (button.buttonType === "replay") {
+                                button.press();
+                                
+                                that.altState = 99;
+                                
+                                setTimeout(() => {
+                                    that.resetGame();
+                                }, 300)
+                            }
+                        }
+                    })
+                }
             }
         }
         this.i += 1;
@@ -417,21 +492,51 @@ class Game {
         requestAnimationFrame(this.play);
     }
 
+    resetGame() {
+        this.gameActivated = false;
+        this.musicActivated = false;
+        this.gameOver = false;
+        this.ships = [];
+        this.buttons = [];
+        this.enemyShips = [];
+        this.enemyButtons = [];
+        this.enemySheeps = [];
+        this.playerSheeps = [];
+        this.sheepPositions = [];
+        this.enemySheepPositions = [];
+        this.enemyFoundPositions = [];
+        this.playerFoundPositions = [];
+        this.playerFiredPositions = [];
+        this.enemyFiredPositions = [];
+
+        this.clearSheep("player");
+        this.clearSheep("enemy");
+
+        this.bgmusic.pause();
+        this.bgmusic.currentTime = 0;
+
+        // reset gameBG;
+        this.gameBG = new Square(this.ctx3, 400, 0, 800, 1200, "gameBG", "gameBG");
+
+        this.state = 0;
+        this.altState = 0;
+    }
+
     generateMenuButtons() {
         let start_rect = new UIObject(this.ctx3, 700, 495, 150, 150, "gameplay", "unpressed", "start");
         let random_rect = new UIObject(this.ctx3, 700, 420, 150, 150, "gameplay", "unpressed", "random");
-        // let replay_rect = new UIObject(this.ctx3, 700, 495, 150, 150, "gameplay", "unpressed", "replay");
+        let replay_rect = new UIObject(this.ctx3, 700, 495, 150, 150, "gameplay", "unpressed", "replay");
 
         this.uiobjects.push(start_rect);
         this.uiobjects.push(random_rect);
-        // this.uiobjects.push(replay_rect);
+        this.uiobjects.push(replay_rect);
 
         let start_button = new Button(start_rect, 644, 760, 518, 477, "start", "N/A");
         let randomize_button = new Button(random_rect, 644, 760, 443, 401, "randomize", "N/A");
-        // let replay_button = new Button(start_rect, 644, 760, 518, 477, "replay", "N/A");
+        let replay_button = new Button(replay_rect, 644, 760, 518, 477, "replay", "N/A");
         this.buttons.push(start_button);
         this.buttons.push(randomize_button);
-        // this.buttons.push(replay_button);
+        this.buttons.push(replay_button);
 
         let music_UI = new UIObject(this.ctx3, 680, 50, 200, 200, "music", "unpressed", "on")
         let sound_UI = new UIObject(this.ctx3, 740, 50, 200, 200, "sound", "unpressed", "on")
@@ -475,6 +580,9 @@ class Game {
     }
 
 
+    redirectToGithub(){
+        window.location = "https://github.com/ncioffi1"
+    }
     playerWon() {
         if (this.enemySheepPositions.length === this.enemyFoundPositions.length) {
             return true;
@@ -733,8 +841,7 @@ class Game {
                     }  
                 } else if (playerType === "enemy") {
                     if (JSON.stringify(myInvalidPositions).includes(_pos)){
-                        // this.activeTextString2 = "Invalid Position:"  
-                        // this.activeTextString3 = "Position too close to another sheep!";
+                        
                         return false;
                     }  
                 }          
@@ -915,33 +1022,33 @@ class Game {
         }
 
         if (playerType === "player"){
-            console.log("              ")
-            console.log("--------------")
-            console.log("- debug tool -")
-            console.log("--------------")
-            console.log("Completed Placing Player Sheep!");
-            console.log("Total Iteration Cycles:  " + iterations.toString());
-            console.log("--------------")
-            console.log("Player left to place:  " + this.sheepLeftToPlace.length.toString());
-            console.log("Sheep Positions Length:  " + this.sheepPositions.length.toString());
-            console.log("Sheep Positions:  ");
-            console.log(this.sheepPositions);
-            console.log("Player Sheeps:  " + this.playerSheeps.toString());
-            console.log("sheep placed");
+            // console.log("              ")
+            // console.log("--------------")
+            // console.log("- debug tool -")
+            // console.log("--------------")
+            // console.log("Completed Placing Player Sheep!");
+            // console.log("Total Iteration Cycles:  " + iterations.toString());
+            // console.log("--------------")
+            // console.log("Player left to place:  " + this.sheepLeftToPlace.length.toString());
+            // console.log("Sheep Positions Length:  " + this.sheepPositions.length.toString());
+            // console.log("Sheep Positions:  ");
+            // console.log(this.sheepPositions);
+            // console.log("Player Sheeps:  " + this.playerSheeps.toString());
+            // console.log("sheep placed");
         } else if (playerType === "enemy"){
-            console.log("              ")
-            console.log("--------------")
-            console.log("- debug tool -")
-            console.log("--------------")
-            console.log("Completed Placing Enemy Sheep!");
-            console.log("Total Iteration Cycles:  " + iterations.toString());
-            console.log("--------------")
-            console.log("Computer left to place:  " + this.computerLeftToPlace.length.toString());
-            console.log("Enemy Sheep Positions Length:  " + this.enemySheepPositions.length.toString());
-            console.log("Enemy Sheep Positions:  ");
-            console.log(this.enemySheepPositions);
-            console.log("Enemy Sheeps:  " + this.enemySheeps.toString());
-            console.log("sheep placed");
+            // console.log("              ")
+            // console.log("--------------")
+            // console.log("- debug tool -")
+            // console.log("--------------")
+            // console.log("Completed Placing Enemy Sheep!");
+            // console.log("Total Iteration Cycles:  " + iterations.toString());
+            // console.log("--------------")
+            // console.log("Computer left to place:  " + this.computerLeftToPlace.length.toString());
+            // console.log("Enemy Sheep Positions Length:  " + this.enemySheepPositions.length.toString());
+            // console.log("Enemy Sheep Positions:  ");
+            // console.log(this.enemySheepPositions);
+            // console.log("Enemy Sheeps:  " + this.enemySheeps.toString());
+            // console.log("sheep placed");
         }
     }
 
@@ -982,34 +1089,93 @@ class Game {
 
     draw() {
         this.ctx1.clearRect(0, 0, 800, 600);
-
         this.ctx3.clearRect(0, 0, 800, 600);
 
-        this.gameBG.draw();
-        // this.ctx3.save();
-        // this.ctx3.globalCompositeOperation = 'copy';
-        // this.ctx3.strokeStyle = 'transparent';
-        // this.ctx3.beginPath();
-        // this.ctx3.lineTo(0, 0);
-        // this.ctx3.stroke();
-        // this.ctx3.restore();
+        if (this.state === -1) {
+            this.ctx1.fillStyle = `rgb(108, 232, 45)`;
+            this.ctx1.fillRect(0, 0, 800, 600);
 
+            this.githubLogo.draw();
+            this.gameLogo.draw();
+            this.gameSheep.draw();
+            this.gameSheep2.draw();
+            this.gamePlay.draw();
+            this.ctx3.font = ("60px Afacad");
+            this.ctx3.fillStyle = "black";
+            this.ctx3.textAlign = "center";
+            if (this.gamePlay.color === "unpressed"){
+                this.ctx3.fillText("Play", 400, 336);
+            } else if (this.gamePlay.color === "pressed"){
+                this.ctx3.fillText("Play", 400, 338);
+            }
+            this.ctx3.font = ("30px Afacad");
+            this.ctx3.fillStyle = "gray";
+            this.ctx3.fillText("Credits", 680, 510);
+
+        } else if (this.state === -2) {
+
+            this.ctx1.fillStyle = `rgb(108, 232, 45)`;
+            this.ctx1.fillRect(0, 0, 800, 600);
+            this.creditsSheep.draw();
+            this.gameSheep2.draw();
+            this.ctx3.font = ("30px Afacad");
+            this.ctx3.fillStyle = "gray";
+            this.ctx3.textAlign = "center";
+
+            this.ctx3.fillText("Back", 680, 510);
+
+            this.ctx3.textAlign = "start";
+            let y = -20;
+            this.ctx3.fillText("Credits", 150, 295 + y);
+            this.ctx3.font = ("14px Afacad");
+            this.ctx3.fillText("'Bama Country' Kevin MacLeod (incompetech.com)", 150, 320 + y);
+            this.ctx3.fillText("Licensed under Creative Commons: By Attribution 4.0 License", 150, 335 + y);
+            this.ctx3.fillText("http://creativecommons.org/licenses/by/4.0/", 150, 350 + y);
+
+            this.ctx3.fillText("The following sounds are Licensed under Creative Commons: Attribution 4.0:", 150, 380 + y);
+            this.ctx3.fillText("'uncompressed cannon.aif' by baefild of Freesound.org", 150, 395 + y);
+            this.ctx3.fillText("'Sigh out tongue 02.wav' by Hawkeye_Sprout of Freesound.org", 150, 410 + y);
+            
+            this.ctx3.fillText("The following sounds are Licensed under Creative Commons: 0:", 150, 440 + y);
+            this.ctx3.fillText("'bah bala oveja/baa bleat sheep.WAV' by SergioJbs of Freesound.org", 150, 455 + y);
+
+            this.ctx3.fillText("Made by Nick Cioffi for App Academy 2023.", 150, 485 + y);
+            this.ctx3.fillText("All Sheeps Reserved.", 150, 500 + y);
+            // "Bama Country" Kevin MacLeod (incompetech.com)
+            // Licensed under Creative Commons: By Attribution 4.0 License
+            // http://creativecommons.org/licenses/by/4.0/
+
+        } else {
+            this.drawGame();
+        }
+
+        requestAnimationFrame(this.draw);
+    }
+
+    drawGame() {
+        this.gameBG.draw(); 
         
         // draw text.  if errors put on own context.
-        this.ctx3.font = ("30px Afacad");
-        this.ctx3.fillStyle = "black";
-        this.ctx3.textAlign = "center";
-        this.ctx3.fillText(this.activeTextString, 400, 50);
+        if (this.activeTextString !== "") {
+            this.ctx3.font = ("30px Afacad");
+            this.ctx3.fillStyle = "black";
+            this.ctx3.textAlign = "center";
+            this.ctx3.fillText(this.activeTextString, 400, 50);
+        }
+        
+        if (this.activeTextString2 !== "") {
+            this.ctx3.font = ("16px Afacad");
+            this.ctx3.fillStyle = "black";
+            this.ctx3.textAlign = "center";
+            this.ctx3.fillText(this.activeTextString2, 400, 80);
+        }
 
-        this.ctx3.font = ("16px Afacad");
-        this.ctx3.fillStyle = "black";
-        this.ctx3.textAlign = "center";
-        this.ctx3.fillText(this.activeTextString2, 400, 80);
-
-        this.ctx3.font = ("16px Afacad");
-        this.ctx3.fillStyle = "black";
-        this.ctx3.textAlign = "center";
-        this.ctx3.fillText(this.activeTextString3, 400, 100);
+        if (this.activeTextString3 !== "") {
+            this.ctx3.font = ("16px Afacad");
+            this.ctx3.fillStyle = "black";
+            this.ctx3.textAlign = "center";
+            this.ctx3.fillText(this.activeTextString3, 400, 100);
+        }
 
         let that = this;
         this.ctx3.font = ("16px Afacad");
@@ -1018,20 +1184,32 @@ class Game {
 
         this.uiobjects.forEach(function(uiobject) {
             if (uiobject.type === "gameplay") {
-                if (!that.gameActivated){
-                    uiobject.draw();
+                if (uiobject.status === "replay"){
+                    if (that.gameOver){
+                        uiobject.draw();
 
-                    if (uiobject.status === "start"){
                         if (uiobject.color === "unpressed"){
-                            that.ctx3.fillText(that.sideButton1, 700, 500);
+                            that.ctx3.fillText(that.sideButton3, 700, 500);
                         } else if (uiobject.color === "pressed"){
-                            that.ctx3.fillText(that.sideButton1, 700, 502);
+                            that.ctx3.fillText(that.sideButton3, 700, 502);
                         }
-                    } else if (uiobject.status === "random"){
-                        if (uiobject.color === "unpressed"){
-                            that.ctx3.fillText(that.sideButton2, 700, 425);
-                        } else if (uiobject.color === "pressed"){
-                            that.ctx3.fillText(that.sideButton2, 700, 427);
+                    }
+                } else {
+                    if (!that.gameActivated){
+                        uiobject.draw();
+    
+                        if (uiobject.status === "start"){
+                            if (uiobject.color === "unpressed"){
+                                that.ctx3.fillText(that.sideButton1, 700, 500);
+                            } else if (uiobject.color === "pressed"){
+                                that.ctx3.fillText(that.sideButton1, 700, 502);
+                            }
+                        } else if (uiobject.status === "random"){
+                            if (uiobject.color === "unpressed"){
+                                that.ctx3.fillText(that.sideButton2, 700, 425);
+                            } else if (uiobject.color === "pressed"){
+                                that.ctx3.fillText(that.sideButton2, 700, 427);
+                            }
                         }
                     }
                 }
@@ -1060,15 +1238,6 @@ class Game {
         if (this.tempSheep4 !== undefined) {
             this.tempSheep4.draw();
         }
-
-
-        // this.drawCall += 1;
-        // if (this.drawCall % 60 === 0) {
-        //     console.log("DRAW CALL:  " + this.drawCall.toString());
-        // }
-        
-
-        requestAnimationFrame(this.draw);
     }
 
 

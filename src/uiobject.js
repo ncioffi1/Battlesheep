@@ -96,18 +96,15 @@ class UIObject {
         this.img9 = this.setImage(this.context, this.filepaths[8], this.xPos, this.yPos, this.xSize, this.ySize);
         this.img10 = this.setImage(this.context, this.filepaths[9], this.xPos, this.yPos, this.xSize, this.ySize);
         
-        console.log("load complete");
-        // console.log(this.img1.image);
-        // console.log(this.img2);
-        // console.log(this.img3);
+        // console.log("load complete");
 
     }
 
     setImage(context, filepath, xPos, yPos, xSize, ySize) {
         let _img = new Image();
         _img.src = filepath;
-        console.log(filepath);
-        console.log(_img);
+        // console.log(filepath);
+        // console.log(_img);
         return _img;
     }
 

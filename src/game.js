@@ -7,12 +7,10 @@ const Button = require('./button.js');
 const Sheep = require('./sheep.js');
 const UIObject = require('./uiobject.js')
 
-// const Asteroid = require('./asteroid.js')
+
 
 class Game {
     constructor(layer3, ctx1, ctx2, ctx3, DIM_X, DIM_Y) {
-        // this.i = 1;
-        // this.ctx = ctx;
         this.layer3 = layer3;
         this.ctx1 = ctx1;
         this.ctx2 = ctx2;
@@ -40,7 +38,6 @@ class Game {
         this.sheepLeftToPlace = [6, 1, 2, 5, 1, 2, 1];
         this.computerLeftToPlace = [6, 1, 2, 5, 1, 2, 1];
         this.sheepRotations = [];
-        // this.generateRotations();
 
         this.sheepPositions = [];
         this.playerFoundPositions = [];
@@ -65,7 +62,7 @@ class Game {
         this.sideButton1 = "Start Game"
         this.sideButton2 = "Randomize"
         this.sideButton3 = "Play Again"
-        this.boardSize = 7;   // 7 works.
+        this.boardSize = 7;   
         this.musicOn = true;
         this.musicActivated = false;
         this.gameActivated = false;
@@ -89,13 +86,6 @@ class Game {
         this.cannon1 = new Audio("./assets/sounds/cannon1.mp3");
         this.sheep1 = new Audio("./assets/sounds/sheep1.mp3");
         this.tongue1 = new Audio("./assets/sounds/tongue1.mp3");
-
-        this.drawCall = 0;
-        this.playCall = 0;
-
-        // this.redirect();
-
-        
     }
 
     // generate array the length of sheepsLeftToPlace w rot values (4 possible)
@@ -115,7 +105,7 @@ class Game {
         this.clickY = y;
         this.clicked = true;
         this.clicked2 = true;
-        console.log("x: " + x + " y: " + y)
+        // console.log("x: " + x + " y: " + y)
     }
 
     getHoverPosition(canvas, event) {
@@ -127,8 +117,6 @@ class Game {
         // console.log("x: " + x + " y: " + y)
     }
     
-    // const canvas = document.querySelector('canvas')
-    
 
     drawImageInCanvas(context, filepath, xPos, yPos, xSize, ySize) {
         var img1 = new Image();
@@ -138,6 +126,7 @@ class Game {
         };
         img1.src = filepath;
     }
+
     // creating a custom game update loop.
     play() {
         if (this.state === -1){
@@ -146,7 +135,7 @@ class Game {
 
                 let that = this;
                 this.layer3.addEventListener('mousedown', function(e) {
-                    // console.log("CLICK")
+                    
                     that.getCursorPosition(layer3, e)
                 })
 
@@ -201,10 +190,9 @@ class Game {
 
                 this.spawnSheep("enemy");
                 this.spawnSheep("player");
-                // console.log("spawned sheeps");
+                
                 
             } else if (this.altState === 1) {
-                // tracking clicks.
                 if (this.clicked){
                     this.clicked = false;
                     let that = this;
@@ -213,7 +201,7 @@ class Game {
                         if (button.buttonCheck(that.clickX, that.clickY)) {
                             if (button.buttonType === "randomize") {
                                 button.press();
-                                // that.generateRotations();
+                                
                                 that.clearSheep("player");
                                 that.spawnSheep("player");
                                 
@@ -246,8 +234,6 @@ class Game {
                                     that.boardSize = 7;
                                     that.sheepLeftToPlace = [6, 1, 2, 5, 1, 2, 1];
                                     that.computerLeftToPlace = [6, 1, 2, 5, 1, 2, 1];
-                                    // that.generateRotations();
-
                                     that.resetGame();
                                 }, 300)
                             } else if (button.buttonType === "size9x9") {
@@ -257,9 +243,7 @@ class Game {
                                 setTimeout(() => {
                                     that.boardSize = 9;
                                     that.sheepLeftToPlace = [7, 6, 1, 2, 5, 4, 3, 2, 1, 1];
-                                    that.computerLeftToPlace = [7, 6, 1, 2, 5, 4, 3, 2, 1, 1];
-                                    // that.generateRotations();
-
+                                    that.computerLeftToPlace = [7, 6, 1, 2, 5, 4, 3, 2, 1, 1];                                    
                                     that.resetGame();
                                 }, 300)
                             }
@@ -267,17 +251,6 @@ class Game {
                     })
                 }
 
-                // tracking hover.
-                let that = this;
-
-                // call this w. activesheep hover function
-                this.buttons.forEach(function(button) {
-                    if (button.buttonType === "ship") {
-                        if (button.buttonCheck(that.hoverX, that.hoverY)) {
-                            //that.activeSheep.hoverSheep(button.buttonPos);
-                        } 
-                    }  
-                })
             } else if (this.altState === 2) {
                 setTimeout(() => { this.altState = 3 }, 1000);
 
@@ -447,7 +420,7 @@ class Game {
                     } else if (!goAgain) { // if you got a hit, go again.  otherwise switch turns.
                         that.activeTextString = "Computer Missed!";
                         setTimeout(() => { this.altState = 2 }, 200);
-                        // that.altState = 2;
+                  
                     } else {
                         that.activeTextString = "Computer Hit!  Computer Goes Again.";
                         setTimeout(() => { this.altState = 7 }, 1000);
@@ -480,7 +453,6 @@ class Game {
                 }
             }
         }
-        // this.i += 1;
 
         // run the callback loop.
 
@@ -538,7 +510,6 @@ class Game {
         this.playerFiredPositions = [];
         this.enemyFiredPositions = [];
         this.sheepRotations = [];
-        // this.generateRotations();
 
         this.clearSheep("player");
         this.clearSheep("enemy");
@@ -546,7 +517,6 @@ class Game {
         this.bgmusic.pause();
         this.bgmusic.currentTime = 0;
 
-        // reset gameBG;
         this.gameBG = new Square(this.ctx3, 400, 0, 800, 1200, "gameBG", "gameBG");
 
         this.state = 0;
@@ -554,7 +524,7 @@ class Game {
     }
 
     generateMenuButtons() {
-        // experimental:  different board sizes
+        // added functionality:  different board sizes
         let seven_rect = new UIObject(this.ctx3, 700, 270, 150, 150, "gameplay", "unpressed", "7x7");
         let nine_rect = new UIObject(this.ctx3, 700, 345, 150, 150, "gameplay", "unpressed", "9x9");
         this.uiobjects.push(seven_rect);
@@ -1086,10 +1056,10 @@ class Game {
             }
         }
 
+        // leaving this in but commenting it out:
+        // this is a really effective series of logs for
+        // debugging sheep placement issues & game functionality.  :)
         if (playerType === "player"){
-            // console.log("              ")
-            // console.log("--------------")
-            // console.log("- debug tool -")
             // console.log("--------------")
             // console.log("Completed Placing Player Sheep!");
             // console.log("Total Iteration Cycles:  " + iterations.toString());
@@ -1101,9 +1071,6 @@ class Game {
             // console.log("Player Sheeps:  " + this.playerSheeps.toString());
             // console.log("sheep placed");
         } else if (playerType === "enemy"){
-            // console.log("              ")
-            // console.log("--------------")
-            // console.log("- debug tool -")
             // console.log("--------------")
             // console.log("Completed Placing Enemy Sheep!");
             // console.log("Total Iteration Cycles:  " + iterations.toString());
@@ -1206,9 +1173,7 @@ class Game {
 
             this.ctx3.fillText("Made by Nick Cioffi for App Academy 2023.", 150, 485 + y);
             this.ctx3.fillText("All Sheeps Reserved.", 150, 500 + y);
-            // "Bama Country" Kevin MacLeod (incompetech.com)
-            // Licensed under Creative Commons: By Attribution 4.0 License
-            // http://creativecommons.org/licenses/by/4.0/
+            
 
         } else {
             this.drawGame();
@@ -1219,8 +1184,7 @@ class Game {
 
     drawGame() {
         this.gameBG.draw(); 
-        
-        // draw text.  if errors put on own context.
+
         if (this.activeTextString !== "") {
             this.ctx3.font = ("30px Afacad");
             this.ctx3.fillStyle = "black";
